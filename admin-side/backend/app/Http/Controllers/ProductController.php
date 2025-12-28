@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 
 class ProductController extends Controller
 {
@@ -47,21 +48,8 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'brand_id' => 'required|exists:brands,id',
-            'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|unique:products,slug',
-            'short_description' => 'nullable|string|max:512',
-            'description' => 'nullable|string',
-            'default_image' => 'nullable|string',
-            'is_active' => 'sometimes|boolean',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $data = [
             'brand_id' => $request->brand_id,
@@ -123,26 +111,12 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateProductRequest $request, $id)
     {
         $product = DB::table('products')->where('id', $id)->first();
 
         if (!$product) {
             return response()->json(['message' => 'Product not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'brand_id' => 'sometimes|required|exists:brands,id',
-            'name' => 'sometimes|required|string|max:255',
-            'slug' => 'nullable|string|unique:products,slug,' . $id,
-            'short_description' => 'nullable|string|max:512',
-            'description' => 'nullable|string',
-            'default_image' => 'nullable|string',
-            'is_active' => 'sometimes|boolean',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [

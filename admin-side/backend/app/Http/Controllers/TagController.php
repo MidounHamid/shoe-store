@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Http\Requests\StoreTagRequest;
+use App\Http\Requests\UpdateTagRequest;
 
 class TagController extends Controller
 {
@@ -35,16 +36,8 @@ class TagController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreTagRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:tags,name',
-            'slug' => 'nullable|string|max:150|unique:tags,slug',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $data = [
             'name' => $request->name,
@@ -74,21 +67,12 @@ class TagController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateTagRequest $request, $id)
     {
         $tag = DB::table('tags')->where('id', $id)->first();
 
         if (!$tag) {
             return response()->json(['message' => 'Tag not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:100|unique:tags,name,' . $id,
-            'slug' => 'nullable|string|max:150|unique:tags,slug,' . $id,
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [];

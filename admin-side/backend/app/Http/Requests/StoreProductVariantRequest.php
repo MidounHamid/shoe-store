@@ -11,7 +11,7 @@ class StoreProductVariantRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,14 @@ class StoreProductVariantRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'product_id' => 'required|exists:products,id',
+            'sku' => 'required|string|unique:product_variants,sku',
+            'size' => 'nullable|string|max:20',
+            'color' => 'nullable|string|max:100',
+            'price' => 'required|numeric|min:0',
+            'original_price' => 'nullable|numeric|min:0',
+            'stock' => 'sometimes|integer|min:0',
+            'attributes' => 'nullable|array',
         ];
     }
 }

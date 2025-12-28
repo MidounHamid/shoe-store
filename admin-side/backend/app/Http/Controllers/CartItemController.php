@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\StoreCartItemRequest;
+use App\Http\Requests\UpdateCartItemRequest;
 
 class CartItemController extends Controller
 {
@@ -33,18 +34,8 @@ class CartItemController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreCartItemRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'cart_id' => 'required|exists:carts,id',
-            'variant_id' => 'required|exists:product_variants,id',
-            'quantity' => 'required|integer|min:1',
-            'price' => 'required|numeric|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         // Check if item already exists in cart
         $existing = DB::table('cart_items')
@@ -110,21 +101,12 @@ class CartItemController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateCartItemRequest $request, $id)
     {
         $item = DB::table('cart_items')->where('id', $id)->first();
 
         if (!$item) {
             return response()->json(['message' => 'Cart item not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'quantity' => 'sometimes|required|integer|min:1',
-            'price' => 'sometimes|required|numeric|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [

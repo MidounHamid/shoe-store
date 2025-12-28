@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Http\Requests\StoreOrderRequest;
+use App\Http\Requests\UpdateOrderRequest;
 
 class OrderController extends Controller
 {
@@ -48,24 +49,8 @@ class OrderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreOrderRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'nullable|exists:users,id',
-            'shipping_address_id' => 'nullable|exists:addresses,id',
-            'billing_address_id' => 'nullable|exists:addresses,id',
-            'subtotal' => 'required|numeric|min:0',
-            'shipping_amount' => 'sometimes|numeric|min:0',
-            'tax_amount' => 'sometimes|numeric|min:0',
-            'total_amount' => 'required|numeric|min:0',
-            'status' => 'sometimes|in:pending,processing,shipped,delivered,cancelled,returned',
-            'payment_status' => 'sometimes|in:pending,paid,failed,refunded',
-            'notes' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         // Generate unique order number
         $orderNumber = 'ORD-' . strtoupper(Str::random(10));
@@ -126,29 +111,12 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateOrderRequest $request, $id)
     {
         $order = DB::table('orders')->where('id', $id)->first();
 
         if (!$order) {
             return response()->json(['message' => 'Order not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'nullable|exists:users,id',
-            'shipping_address_id' => 'nullable|exists:addresses,id',
-            'billing_address_id' => 'nullable|exists:addresses,id',
-            'subtotal' => 'sometimes|required|numeric|min:0',
-            'shipping_amount' => 'sometimes|numeric|min:0',
-            'tax_amount' => 'sometimes|numeric|min:0',
-            'total_amount' => 'sometimes|required|numeric|min:0',
-            'status' => 'sometimes|in:pending,processing,shipped,delivered,cancelled,returned',
-            'payment_status' => 'sometimes|in:pending,paid,failed,refunded',
-            'notes' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [

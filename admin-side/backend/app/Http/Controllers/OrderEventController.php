@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\StoreOrderEventRequest;
+use App\Http\Requests\UpdateOrderEventRequest;
 
 class OrderEventController extends Controller
 {
@@ -44,17 +45,8 @@ class OrderEventController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreOrderEventRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'order_id' => 'required|exists:orders,id',
-            'event_type' => 'required|string',
-            'data' => 'nullable|array',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $data = [
             'order_id' => $request->order_id,
@@ -103,21 +95,12 @@ class OrderEventController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateOrderEventRequest $request, $id)
     {
         $event = DB::table('order_events')->where('id', $id)->first();
 
         if (!$event) {
             return response()->json(['message' => 'Order event not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'event_type' => 'sometimes|required|string',
-            'data' => 'nullable|array',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [

@@ -11,7 +11,7 @@ class StoreOrderEventRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,9 @@ class StoreOrderEventRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'order_id' => 'required|exists:orders,id',
+            'event_type' => 'required|string',
+            'data' => 'nullable|array',
         ];
     }
 }

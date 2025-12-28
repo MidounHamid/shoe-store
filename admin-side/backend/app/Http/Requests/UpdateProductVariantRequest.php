@@ -11,7 +11,7 @@ class UpdateProductVariantRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,8 +21,16 @@ class UpdateProductVariantRequest extends FormRequest
      */
     public function rules(): array
     {
+        $variantId = $this->route('id') ?? $this->route('variant');
         return [
-            //
+            'product_id' => 'sometimes|required|exists:products,id',
+            'sku' => 'sometimes|required|string|unique:product_variants,sku,' . $variantId,
+            'size' => 'nullable|string|max:20',
+            'color' => 'nullable|string|max:100',
+            'price' => 'sometimes|required|numeric|min:0',
+            'original_price' => 'nullable|numeric|min:0',
+            'stock' => 'sometimes|integer|min:0',
+            'attributes' => 'nullable|array',
         ];
     }
 }

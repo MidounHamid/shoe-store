@@ -11,7 +11,7 @@ class UpdateOrderEventRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,8 @@ class UpdateOrderEventRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'event_type' => 'sometimes|required|string',
+            'data' => 'nullable|array',
         ];
     }
 }

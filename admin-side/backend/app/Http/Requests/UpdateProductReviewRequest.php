@@ -11,7 +11,7 @@ class UpdateProductReviewRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,10 @@ class UpdateProductReviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'rating' => 'sometimes|required|integer|min:1|max:5',
+            'title' => 'nullable|string|max:255',
+            'body' => 'nullable|string',
+            'helpful_count' => 'sometimes|integer|min:0',
         ];
     }
 }

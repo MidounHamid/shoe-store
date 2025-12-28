@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\StoreProductVariantRequest;
+use App\Http\Requests\UpdateProductVariantRequest;
 
 class ProductVariantController extends Controller
 {
@@ -41,22 +42,8 @@ class ProductVariantController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProductVariantRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'product_id' => 'required|exists:products,id',
-            'sku' => 'required|string|unique:product_variants,sku',
-            'size' => 'nullable|string|max:20',
-            'color' => 'nullable|string|max:100',
-            'price' => 'required|numeric|min:0',
-            'original_price' => 'nullable|numeric|min:0',
-            'stock' => 'sometimes|integer|min:0',
-            'attributes' => 'nullable|array',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $data = [
             'product_id' => $request->product_id,
@@ -110,27 +97,12 @@ class ProductVariantController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateProductVariantRequest $request, $id)
     {
         $variant = DB::table('product_variants')->where('id', $id)->first();
 
         if (!$variant) {
             return response()->json(['message' => 'Product variant not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'product_id' => 'sometimes|required|exists:products,id',
-            'sku' => 'sometimes|required|string|unique:product_variants,sku,' . $id,
-            'size' => 'nullable|string|max:20',
-            'color' => 'nullable|string|max:100',
-            'price' => 'sometimes|required|numeric|min:0',
-            'original_price' => 'nullable|numeric|min:0',
-            'stock' => 'sometimes|integer|min:0',
-            'attributes' => 'nullable|array',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [

@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\StoreAddressRequest;
+use App\Http\Requests\UpdateAddressRequest;
 
 class AddressController extends Controller
 {
@@ -42,24 +43,8 @@ class AddressController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreAddressRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'label' => 'nullable|string|max:50',
-            'full_name' => 'required|string|max:255',
-            'street_address' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'state' => 'nullable|string|max:255',
-            'postal_code' => 'required|string|max:20',
-            'country' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:30',
-            'is_default' => 'sometimes|boolean',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         // If this is set as default, unset other defaults for this user
         if ($request->get('is_default', false)) {
@@ -114,29 +99,12 @@ class AddressController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateAddressRequest $request, $id)
     {
         $address = DB::table('addresses')->where('id', $id)->first();
 
         if (!$address) {
             return response()->json(['message' => 'Address not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'sometimes|required|exists:users,id',
-            'label' => 'nullable|string|max:50',
-            'full_name' => 'sometimes|required|string|max:255',
-            'street_address' => 'sometimes|required|string|max:255',
-            'city' => 'sometimes|required|string|max:255',
-            'state' => 'nullable|string|max:255',
-            'postal_code' => 'sometimes|required|string|max:20',
-            'country' => 'sometimes|required|string|max:255',
-            'phone' => 'nullable|string|max:30',
-            'is_default' => 'sometimes|boolean',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         // If this is set as default, unset other defaults for this user

@@ -11,7 +11,7 @@ class UpdateProductImageRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,10 @@ class UpdateProductImageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'product_id' => 'sometimes|required|exists:products,id',
+            'variant_id' => 'nullable|exists:product_variants,id',
+            'image_url' => 'sometimes|required|string|max:500',
+            'display_order' => 'sometimes|integer|min:0',
         ];
     }
 }

@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\StoreOrderItemRequest;
+use App\Http\Requests\UpdateOrderItemRequest;
 
 class OrderItemController extends Controller
 {
@@ -40,20 +41,8 @@ class OrderItemController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreOrderItemRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'order_id' => 'required|exists:orders,id',
-            'variant_id' => 'required|exists:product_variants,id',
-            'product_snapshot' => 'required|array',
-            'quantity' => 'required|integer|min:1',
-            'unit_price' => 'required|numeric|min:0',
-            'line_total' => 'required|numeric|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $data = [
             'order_id' => $request->order_id,
@@ -105,23 +94,12 @@ class OrderItemController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateOrderItemRequest $request, $id)
     {
         $item = DB::table('order_items')->where('id', $id)->first();
 
         if (!$item) {
             return response()->json(['message' => 'Order item not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'quantity' => 'sometimes|required|integer|min:1',
-            'unit_price' => 'sometimes|required|numeric|min:0',
-            'line_total' => 'sometimes|required|numeric|min:0',
-            'product_snapshot' => 'sometimes|array',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [];

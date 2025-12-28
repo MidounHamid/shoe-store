@@ -11,7 +11,7 @@ class UpdateBrandRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,8 +21,10 @@ class UpdateBrandRequest extends FormRequest
      */
     public function rules(): array
     {
+        $brandId = $this->route('id') ?? $this->route('brand');
         return [
-            //
+            'name' => 'sometimes|required|string|max:100|unique:brands,name,' . $brandId,
+            'slug' => 'nullable|string|max:150|unique:brands,slug,' . $brandId,
         ];
     }
 }

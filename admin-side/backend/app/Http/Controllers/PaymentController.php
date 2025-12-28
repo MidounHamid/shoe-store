@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\StorePaymentRequest;
+use App\Http\Requests\UpdatePaymentRequest;
 
 class PaymentController extends Controller
 {
@@ -44,22 +45,8 @@ class PaymentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StorePaymentRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'order_id' => 'required|exists:orders,id',
-            'provider' => 'nullable|string',
-            'provider_payment_id' => 'nullable|string',
-            'amount' => 'required|numeric|min:0',
-            'currency' => 'sometimes|string|size:3',
-            'status' => 'sometimes|in:pending,paid,failed,refunded',
-            'method' => 'nullable|string',
-            'metadata' => 'nullable|array',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $data = [
             'order_id' => $request->order_id,
@@ -113,26 +100,12 @@ class PaymentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdatePaymentRequest $request, $id)
     {
         $payment = DB::table('payments')->where('id', $id)->first();
 
         if (!$payment) {
             return response()->json(['message' => 'Payment not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'provider' => 'nullable|string',
-            'provider_payment_id' => 'nullable|string',
-            'amount' => 'sometimes|required|numeric|min:0',
-            'currency' => 'sometimes|string|size:3',
-            'status' => 'sometimes|in:pending,paid,failed,refunded',
-            'method' => 'nullable|string',
-            'metadata' => 'nullable|array',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [

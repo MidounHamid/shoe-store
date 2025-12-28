@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\StoreProductImageRequest;
+use App\Http\Requests\UpdateProductImageRequest;
 
 class ProductImageController extends Controller
 {
@@ -39,18 +40,8 @@ class ProductImageController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProductImageRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'product_id' => 'required|exists:products,id',
-            'variant_id' => 'nullable|exists:product_variants,id',
-            'image_url' => 'required|string|max:500',
-            'display_order' => 'sometimes|integer|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $data = [
             'product_id' => $request->product_id,
@@ -90,23 +81,12 @@ class ProductImageController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateProductImageRequest $request, $id)
     {
         $image = DB::table('product_images')->where('id', $id)->first();
 
         if (!$image) {
             return response()->json(['message' => 'Product image not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'product_id' => 'sometimes|required|exists:products,id',
-            'variant_id' => 'nullable|exists:product_variants,id',
-            'image_url' => 'sometimes|required|string|max:500',
-            'display_order' => 'sometimes|integer|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [];

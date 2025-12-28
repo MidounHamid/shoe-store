@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\StoreFavoriteRequest;
 
 class FavoriteController extends Controller
 {
@@ -38,16 +38,8 @@ class FavoriteController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreFavoriteRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'product_id' => 'required|exists:products,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         // Check if already favorited
         $existing = DB::table('favorites')
@@ -115,16 +107,8 @@ class FavoriteController extends Controller
     /**
      * Remove favorite by user and product
      */
-    public function removeByUserAndProduct(Request $request)
+    public function removeByUserAndProduct(StoreFavoriteRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'product_id' => 'required|exists:products,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $deleted = DB::table('favorites')
             ->where('user_id', $request->user_id)

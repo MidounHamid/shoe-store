@@ -11,7 +11,7 @@ class UpdateOrderRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,16 @@ class UpdateOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'user_id' => 'nullable|exists:users,id',
+            'shipping_address_id' => 'nullable|exists:addresses,id',
+            'billing_address_id' => 'nullable|exists:addresses,id',
+            'subtotal' => 'sometimes|required|numeric|min:0',
+            'shipping_amount' => 'sometimes|numeric|min:0',
+            'tax_amount' => 'sometimes|numeric|min:0',
+            'total_amount' => 'sometimes|required|numeric|min:0',
+            'status' => 'sometimes|in:pending,processing,shipped,delivered,cancelled,returned',
+            'payment_status' => 'sometimes|in:pending,paid,failed,refunded',
+            'notes' => 'nullable|string',
         ];
     }
 }

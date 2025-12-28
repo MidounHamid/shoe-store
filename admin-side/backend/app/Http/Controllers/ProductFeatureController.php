@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\StoreProductFeatureRequest;
+use App\Http\Requests\UpdateProductFeatureRequest;
 
 class ProductFeatureController extends Controller
 {
@@ -34,17 +35,8 @@ class ProductFeatureController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProductFeatureRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'product_id' => 'required|exists:products,id',
-            'feature_text' => 'required|string',
-            'display_order' => 'sometimes|integer|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $data = [
             'product_id' => $request->product_id,
@@ -83,22 +75,12 @@ class ProductFeatureController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateProductFeatureRequest $request, $id)
     {
         $feature = DB::table('product_features')->where('id', $id)->first();
 
         if (!$feature) {
             return response()->json(['message' => 'Product feature not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'product_id' => 'sometimes|required|exists:products,id',
-            'feature_text' => 'sometimes|required|string',
-            'display_order' => 'sometimes|integer|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [];

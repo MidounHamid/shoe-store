@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Http\Requests\StoreCartRequest;
+use App\Http\Requests\UpdateCartRequest;
 
 class CartController extends Controller
 {
@@ -38,16 +39,8 @@ class CartController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreCartRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'nullable|exists:users,id',
-            'session_token' => 'nullable|uuid',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         // Generate session token if not provided
         $sessionToken = $request->session_token ?? Str::uuid()->toString();
@@ -100,21 +93,12 @@ class CartController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateCartRequest $request, $id)
     {
         $cart = DB::table('carts')->where('id', $id)->first();
 
         if (!$cart) {
             return response()->json(['message' => 'Cart not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'nullable|exists:users,id',
-            'session_token' => 'nullable|uuid',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [

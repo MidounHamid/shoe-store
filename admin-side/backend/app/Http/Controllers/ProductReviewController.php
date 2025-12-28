@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\StoreProductReviewRequest;
+use App\Http\Requests\UpdateProductReviewRequest;
 
 class ProductReviewController extends Controller
 {
@@ -43,20 +44,8 @@ class ProductReviewController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProductReviewRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'product_id' => 'required|exists:products,id',
-            'user_id' => 'nullable|exists:users,id',
-            'rating' => 'required|integer|min:1|max:5',
-            'title' => 'nullable|string|max:255',
-            'body' => 'nullable|string',
-            'verified_order_item_id' => 'nullable|integer',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $data = [
             'product_id' => $request->product_id,
@@ -103,23 +92,12 @@ class ProductReviewController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateProductReviewRequest $request, $id)
     {
         $review = DB::table('product_reviews')->where('id', $id)->first();
 
         if (!$review) {
             return response()->json(['message' => 'Product review not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'rating' => 'sometimes|required|integer|min:1|max:5',
-            'title' => 'nullable|string|max:255',
-            'body' => 'nullable|string',
-            'helpful_count' => 'sometimes|integer|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [

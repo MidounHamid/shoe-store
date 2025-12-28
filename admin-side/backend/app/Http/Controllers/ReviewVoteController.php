@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\StoreReviewVoteRequest;
+use App\Http\Requests\UpdateReviewVoteRequest;
 
 class ReviewVoteController extends Controller
 {
@@ -38,17 +39,8 @@ class ReviewVoteController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreReviewVoteRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'review_id' => 'required|exists:product_reviews,id',
-            'user_id' => 'required|exists:users,id',
-            'vote' => 'required|integer|in:-1,1',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         // Check if user already voted
         $existing = DB::table('review_votes')
@@ -117,20 +109,12 @@ class ReviewVoteController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateReviewVoteRequest $request, $id)
     {
         $vote = DB::table('review_votes')->where('id', $id)->first();
 
         if (!$vote) {
             return response()->json(['message' => 'Review vote not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'vote' => 'required|integer|in:-1,1',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $data = [
