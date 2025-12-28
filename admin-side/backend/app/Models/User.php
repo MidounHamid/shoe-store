@@ -19,9 +19,13 @@ class User extends Authenticatable implements JWTSubject
      * @var list<string>
      */
     protected $fillable = [
-        'name',
         'email',
         'password',
+        'first_name',
+        'last_name',
+        'phone',
+        'role',
+        'email_verified',
     ];
 
     /**
@@ -42,7 +46,7 @@ class User extends Authenticatable implements JWTSubject
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
+            'email_verified' => 'boolean',
             'password' => 'hashed',
         ];
     }

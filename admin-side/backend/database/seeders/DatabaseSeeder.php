@@ -16,14 +16,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        $admin1 = User::factory()->create([
-            'name' => "Admin",
-            'email' => "admin@gmail.com",
-            // 'email_verified_at' => now(),
-            'password' => Hash::make("admin@gmail.com"),
-            'remember_token' => "test_token",
+        User::create([
+            'first_name' => "Admin",
+            'last_name'  => "User",
+            'email'      => "admin@gmail.com",
+            'password'   => Hash::make("admin@gmail.com"),
+            'role'       => 'admin', // Setting the role you defined in migration
+            'email_verified' => true,
         ]);
     }
 }
