@@ -84,11 +84,17 @@ export default function Statics({ stats, period, setPeriod }: StaticsProps) {
     }
   }, [date, setPeriod]);
 
-  // Filter data based on selected date range
-  const fullChartData = stats.monthly_revenue_curve.map((item) => ({
-    month: monthMap[item.month] ?? item.month,
-    revenue: item.revenue,
-  }));
+  // Format chart data - backend returns YYYY-MM format, convert to readable month names
+  const fullChartData = stats.monthly_revenue_curve.map((item) => {
+    // Parse YYYY-MM format
+    const [year, month] = item.month.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+    const monthName = format(date, 'MMMM', { locale: fr });
+    return {
+      month: monthName,
+      revenue: item.revenue,
+    };
+  });
 
 
 

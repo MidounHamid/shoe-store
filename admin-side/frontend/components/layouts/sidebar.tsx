@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronDown, Calendar, X } from "lucide-react";
+import { ChevronDown, X, ShoppingBag, CreditCard } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,7 +12,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoSection from "@/components/logo";
 import { getAuthToken } from "@/lib/auth";
-import { toast } from "@/components/ui/use-toast";
 
 interface SidebarProps {
     sidebarOpen: boolean;
@@ -36,23 +35,21 @@ export function Sidebar({
     const [expandedItems, setExpandedItems] =
         useState<Record<string, boolean>>(initialExpanded);
 
-    // State for reservation counter
-    const [reservationCount, setReservationCount] = useState<number>(0);
-    const [isLoadingReservations, setIsLoadingReservations] = useState<boolean>(true);
+    // State for dynamic counts
+    const [counts, setCounts] = useState<Record<string, number>>({});
+    const [isLoadingCounts, setIsLoadingCounts] = useState<boolean>(true);
 
     const { user } = useAuth();
-    const reservation_online_permission = user && user.role?.permissions?.find(
-                            (permission) => permission.service ==="reservation_online"
-                        )?.read;
+
     useEffect(() => {
-        async function fetchReservationCount() {
+        async function fetchCounts() {
             try {
-                setIsLoadingReservations(true);
+                setIsLoadingCounts(true);
                 const token = getAuthToken();
                 if (!token) throw new Error("No authentication token found");
 
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/reservation-by-websites/count`,
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/counts`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -65,22 +62,18 @@ export function Sidebar({
                     throw new Error(`HTTP error! status: ${response.status}`);
 
                 const result = await response.json();
-                setReservationCount(result.count ?? 0);
+                setCounts(result);
             } catch (error) {
-                console.error("Error fetching reservation count:", error);
-                toast({
-                    title: "Erreur",
-                    description: "Échec du chargement du compteur de réservations.",
-                    variant: "destructive",
-                });
+                console.error("Error fetching counts:", error);
             } finally {
-                setIsLoadingReservations(false);
+                setIsLoadingCounts(false);
             }
         }
 
-        if(reservation_online_permission){
-            fetchReservationCount();
-        }
+        fetchCounts();
+        // Refresh counts every 30 seconds
+        const interval = setInterval(fetchCounts, 30000);
+        return () => clearInterval(interval);
     }, []);
 
     if (!user) return null;
@@ -104,11 +97,21 @@ export function Sidebar({
             <ScrollArea className="flex-1 px-3 py-2">
                 <div className="space-y-1">
                     {MENU?.map((item) => {
-                        const matchedPermission = user.role?.permissions?.find(
-                            (permission) => permission.service === item.service
-                        );
-
-                        if (matchedPermission?.read != true) return null;
+                        // If user has no role or permissions, show all items (for admin/development)
+                        const hasNoPermissions = !user.role || !user.role.permissions || user.role.permissions.length === 0;
+                        const isAdmin = user.role?.name?.toLowerCase() === 'admin';
+                        
+                        // If no permissions system exists or user is admin, show all items
+                        if (hasNoPermissions || isAdmin) {
+                            // Show the item
+                        } else {
+                            // Check permissions
+                            const matchedPermission = user.role?.permissions?.find(
+                                (permission) => permission.service === item.service
+                            );
+                            
+                            if (matchedPermission?.read !== true) return null;
+                        }
 
                         return (
                             <div key={item.title} className="mb-1">
@@ -141,29 +144,46 @@ export function Sidebar({
                                             {item.icon}
                                             <span>{item.title}</span>
                                         </div>
-                                        {item.items && (
-                                            <ChevronDown
-                                                className={cn(
-                                                    "ml-2 h-4 w-4 transition-transform",
-                                                    expandedItems[item.title] ? "rotate-180" : ""
-                                                )}
-                                            />
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            {/* Dynamic badge based on service */}
+                                            {!isLoadingCounts && item.service && counts[item.service] !== undefined && counts[item.service] > 0 && (
+                                                <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                                                    {counts[item.service] > 99 ? '99+' : counts[item.service]}
+                                                </span>
+                                            )}
+                                            {item.items && (
+                                                <ChevronDown
+                                                    className={cn(
+                                                        "ml-2 h-4 w-4 transition-transform",
+                                                        expandedItems[item.title] ? "rotate-180" : ""
+                                                    )}
+                                                />
+                                            )}
+                                        </div>
                                     </button>
                                 )}
 
                                 {item.items && expandedItems[item.title] && (
                                     <div className="mt-1 ml-6 space-y-1 border-l pl-3">
                                         {item.items.map((subItem) => {
-                                            const matchedPermission = user.role?.permissions?.find(
-                                                (permission) => permission.service === item.service
-                                            );
-                                            type CrudMethod = "read" | "create" | "update" | "delete";
-                                            if (
-                                                !matchedPermission ||
-                                                !matchedPermission[subItem.method as CrudMethod]
-                                            )
-                                                return null;
+                                            // If user has no permissions or is admin, show all sub-items
+                                            const hasNoPermissions = !user.role || !user.role.permissions || user.role.permissions.length === 0;
+                                            const isAdmin = user.role?.name?.toLowerCase() === 'admin';
+                                            
+                                            if (hasNoPermissions || isAdmin) {
+                                                // Show the sub-item
+                                            } else {
+                                                // Check permissions for sub-items
+                                                const matchedPermission = user.role?.permissions?.find(
+                                                    (permission) => permission.service === item.service
+                                                );
+                                                type CrudMethod = "read" | "create" | "update" | "delete";
+                                                if (
+                                                    !matchedPermission ||
+                                                    !matchedPermission[subItem.method as CrudMethod]
+                                                )
+                                                    return null;
+                                            }
 
                                             return (
                                                 <Link
@@ -187,39 +207,56 @@ export function Sidebar({
 
             <div className="border-t p-3">
                 <div className="space-y-1">
-                    {/* Online Reservations Counter - Now clickable with Link */}
-                    {!!reservation_online_permission && <Link
-                        href="/reservationOnlign/reservationOnlignList"
-                        className={cn(
-                            "flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-medium hover:bg-muted transition-colors",
-                            pathname === "/reservationOnlign/reservationOnlignList"
-                                ? "bg-primary/10 text-primary"
-                                : ""
-                        )}
-                    >
-                        <div className="flex items-center gap-3">
-                            <Calendar className="h-5 w-5 text-muted-foreground" />
-                            <span>Online Reservations</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {isLoadingReservations ? (
-                                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                                <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[24px] text-center">
-                                    {reservationCount}
-                                </span>
+                    {/* Pending Orders Counter */}
+                    {!isLoadingCounts && counts.pending_orders > 0 && (
+                        <Link
+                            href="/orders/list?status=pending"
+                            className={cn(
+                                "flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-medium hover:bg-muted transition-colors",
+                                pathname === "/orders/list"
+                                    ? "bg-primary/10 text-primary"
+                                    : ""
                             )}
-                        </div>
-                    </Link>}
+                        >
+                            <div className="flex items-center gap-3">
+                                <ShoppingBag className="h-5 w-5 text-muted-foreground" />
+                                <span>Pending Orders</span>
+                            </div>
+                            <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[24px] text-center">
+                                {counts.pending_orders > 99 ? '99+' : counts.pending_orders}
+                            </span>
+                        </Link>
+                    )}
+
+                    {/* Pending Payments Counter */}
+                    {!isLoadingCounts && counts.pending_payments > 0 && (
+                        <Link
+                            href="/payments/list?status=pending"
+                            className={cn(
+                                "flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-medium hover:bg-muted transition-colors",
+                                pathname === "/payments/list"
+                                    ? "bg-primary/10 text-primary"
+                                    : ""
+                            )}
+                        >
+                            <div className="flex items-center gap-3">
+                                <CreditCard className="h-5 w-5 text-muted-foreground" />
+                                <span>Pending Payments</span>
+                            </div>
+                            <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[24px] text-center">
+                                {counts.pending_payments > 99 ? '99+' : counts.pending_payments}
+                            </span>
+                        </Link>
+                    )}
 
                     {/* User Profile Section */}
                     <button className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-medium hover:bg-muted">
                         <div className="flex items-center gap-3">
                             <Avatar className="h-6 w-6">
                                 <AvatarImage alt="User" />
-                                <AvatarFallback>{user?.name[0].toUpperCase()}</AvatarFallback>
+                                <AvatarFallback>{user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                             </Avatar>
-                            <span>{user?.name}</span>
+                            <span>{user?.name || user?.email || 'User'}</span>
                         </div>
                     </button>
                 </div>
