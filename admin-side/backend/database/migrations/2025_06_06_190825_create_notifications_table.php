@@ -11,7 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // No-op: full product_categories schema is defined in the later migration 2025_12_28_213324_create_product_categories_table.php
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('content');
+            $table->string('type');
+            $table->boolean('read')->default(false);
+            $table->timestamps();
+        });
     }
 
     /**
@@ -19,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_categories');
+        Schema::dropIfExists('notifications');
     }
 };

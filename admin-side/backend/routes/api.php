@@ -22,6 +22,7 @@ use App\Http\Controllers\OrderEventController;
 use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\ReviewVoteController;
 use App\Http\Controllers\CountController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -60,6 +61,18 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('order-events', OrderEventController::class);
     Route::apiResource('product-reviews', ProductReviewController::class);
     Route::apiResource('review-votes', ReviewVoteController::class);
+
+
+    Route::get('/notifications-unread', [NotificationController::class, 'unreadCount']);
+
+
+       // Notifications
+    Route::resource('notifications', NotificationController::class);
+
+
+    Route::get('notifications-unread', [NotificationController::class, 'unread']);
+    Route::post('notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+    Route::post('notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
 
     // Additional routes
     Route::post('/favorites/remove-by-user-product', [FavoriteController::class, 'removeByUserAndProduct']);

@@ -16,9 +16,9 @@ return new class extends Migration
             $table->foreignId('brand_id')->constrained()->restrictOnDelete();
             $table->string('name');
             $table->string('slug')->unique();
-            $table->string('short_description',512)->nullable();
+            $table->string('short_description', 512)->nullable();
             $table->text('description')->nullable();
-            $table->string('default_image')->nullable();
+            $table->longText('default_image')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

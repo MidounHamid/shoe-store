@@ -23,7 +23,7 @@ class ProductVariantSeeder extends Seeder
             if (str_contains(strtolower($product->name), 'iphone') || str_contains(strtolower($product->name), 'samsung')) {
                 $colors = ['Black', 'White', 'Blue', 'Purple'];
                 $storages = ['128GB', '256GB', '512GB'];
-                
+
                 foreach ($colors as $color) {
                     foreach ($storages as $storage) {
                         $variants[] = [
@@ -41,7 +41,7 @@ class ProductVariantSeeder extends Seeder
             // Laptops - different configurations
             elseif (str_contains(strtolower($product->name), 'macbook') || str_contains(strtolower($product->name), 'laptop') || str_contains(strtolower($product->name), 'xps') || str_contains(strtolower($product->name), 'thinkpad') || str_contains(strtolower($product->name), 'spectre')) {
                 $configs = ['8GB RAM / 256GB SSD', '16GB RAM / 512GB SSD', '32GB RAM / 1TB SSD'];
-                
+
                 foreach ($configs as $index => $config) {
                     $variants[] = [
                         'product_id' => $product->id,
@@ -58,7 +58,7 @@ class ProductVariantSeeder extends Seeder
             elseif (str_contains(strtolower($product->name), 'shoe') || str_contains(strtolower($product->name), 'air') || str_contains(strtolower($product->name), 'ultraboost')) {
                 $sizes = ['7', '8', '9', '10', '11', '12'];
                 $colors = ['Black', 'White', 'Blue'];
-                
+
                 foreach ($colors as $color) {
                     foreach ($sizes as $size) {
                         $variants[] = [
@@ -76,7 +76,7 @@ class ProductVariantSeeder extends Seeder
             // Cameras - different lens kits
             elseif (str_contains(strtolower($product->name), 'camera') || str_contains(strtolower($product->name), 'eos') || str_contains(strtolower($product->name), 'd850')) {
                 $kits = ['Body Only', 'With 24-70mm Lens', 'With 70-200mm Lens'];
-                
+
                 foreach ($kits as $index => $kit) {
                     $variants[] = [
                         'product_id' => $product->id,
@@ -92,7 +92,7 @@ class ProductVariantSeeder extends Seeder
             // TVs - different sizes
             elseif (str_contains(strtolower($product->name), 'tv') || str_contains(strtolower($product->name), 'oled')) {
                 $sizes = ['55"', '65"', '77"'];
-                
+
                 foreach ($sizes as $size) {
                     $variants[] = [
                         'product_id' => $product->id,
@@ -108,7 +108,7 @@ class ProductVariantSeeder extends Seeder
             // Headphones - different colors
             elseif (str_contains(strtolower($product->name), 'headphone') || str_contains(strtolower($product->name), 'wh-')) {
                 $colors = ['Black', 'Silver', 'Blue'];
-                
+
                 foreach ($colors as $color) {
                     $variants[] = [
                         'product_id' => $product->id,
@@ -125,7 +125,7 @@ class ProductVariantSeeder extends Seeder
             else {
                 $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
                 $colors = ['Black', 'White', 'Blue', 'Gray'];
-                
+
                 foreach ($colors as $color) {
                     foreach ($sizes as $size) {
                         $variants[] = [
@@ -148,4 +148,3 @@ class ProductVariantSeeder extends Seeder
         }
     }
 }
-

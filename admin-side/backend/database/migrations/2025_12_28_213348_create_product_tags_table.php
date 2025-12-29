@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->foreignId('tag_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
-            
+
             // Setting the primary key as a combination of both IDs
             $table->primary(['product_id', 'tag_id']);
         });
@@ -29,4 +29,3 @@ return new class extends Migration
         Schema::dropIfExists('product_tags');
     }
 };
-

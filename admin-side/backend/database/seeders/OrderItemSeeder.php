@@ -33,12 +33,11 @@ class OrderItemSeeder extends Seeder
                     'unit_price' => $price,
                     'line_total' => $price * $quantity,
                     'product_snapshot' => [
-                        'product' => $variant->product->only(['id','name','slug']),
-                        'variant' => $variant->only(['id','sku','size','color']),
+                        'product' => $variant->product->only(['id', 'name', 'slug']),
+                        'variant' => $variant->only(['id', 'sku', 'size', 'color']),
                     ],
                 ]);
             }
         }
     }
 }
-

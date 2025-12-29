@@ -32,4 +32,3 @@ class ReviewVoteSeeder extends Seeder
         }
     }
 }
-

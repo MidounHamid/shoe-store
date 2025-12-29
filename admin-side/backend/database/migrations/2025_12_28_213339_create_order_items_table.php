@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreignId('variant_id')->constrained('product_variants')->restrictOnDelete();
             $table->json('product_snapshot');
             $table->integer('quantity');
-            $table->decimal('unit_price',10,2);
-            $table->decimal('line_total',10,2);
+            $table->decimal('unit_price', 10, 2);
+            $table->decimal('line_total', 10, 2);
             $table->timestamps();
         });
     }
