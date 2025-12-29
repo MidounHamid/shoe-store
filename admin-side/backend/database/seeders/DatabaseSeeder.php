@@ -16,13 +16,44 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::create([
-            'first_name' => "Admin",
-            'last_name'  => "User",
-            'email'      => "admin@gmail.com",
-            'password'   => Hash::make("admin@gmail.com"),
-            'role'       => 'admin', // Setting the role you defined in migration
-            'email_verified' => true,
+        // Base tables (no dependencies)
+        $this->call([
+            BrandSeeder::class,
+            CategorySeeder::class,
+            TagSeeder::class,
+            UserSeeder::class,
+        ]);
+
+        // Products and related
+        $this->call([
+            ProductSeeder::class,
+            ProductVariantSeeder::class,
+            ProductCategorySeeder::class,
+            ProductTagSeeder::class,
+            ProductImageSeeder::class,
+            ProductFeatureSeeder::class,
+        ]);
+
+        // User-related
+        $this->call([
+            AddressSeeder::class,
+            CartSeeder::class,
+            CartItemSeeder::class,
+            FavoriteSeeder::class,
+        ]);
+
+        // Orders and payments
+        $this->call([
+            OrderSeeder::class,
+            OrderItemSeeder::class,
+            PaymentSeeder::class,
+            OrderEventSeeder::class,
+        ]);
+
+        // Reviews
+        $this->call([
+            ProductReviewSeeder::class,
+            ReviewVoteSeeder::class,
         ]);
     }
 }

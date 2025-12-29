@@ -11,10 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_categories', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+        // No-op: full product_categories schema is defined in the later migration 2025_12_28_213324_create_product_categories_table.php
     }
 
     /**

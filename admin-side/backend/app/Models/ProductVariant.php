@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductVariant extends Model
 {
@@ -17,12 +18,14 @@ class ProductVariant extends Model
         'attributes',
     ];
 
-    protected function casts(): array
+    protected $casts = [
+        'price' => 'decimal:2',
+        'original_price' => 'decimal:2',
+        'attributes' => 'array',
+    ];
+
+    public function product(): BelongsTo
     {
-        return [
-            'price' => 'decimal:2',
-            'original_price' => 'decimal:2',
-            'attributes' => 'array',
-        ];
+        return $this->belongsTo(Product::class);
     }
 }

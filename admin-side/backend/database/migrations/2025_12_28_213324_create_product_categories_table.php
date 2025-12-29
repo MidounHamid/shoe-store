@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('product_categories', function (Blueprint $table) {
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
+            $table->timestamps();
 
             // Setting the primary key as a combination of both IDs
             $table->primary(['product_id', 'category_id']);

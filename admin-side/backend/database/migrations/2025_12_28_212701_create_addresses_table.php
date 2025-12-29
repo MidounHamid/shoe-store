@@ -11,10 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('addresses', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+        // No-op: full addresses schema is defined in the later migration 2025_12_28_213319_create_addresses_table.php
     }
 
     /**

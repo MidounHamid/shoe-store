@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('feature_text');
             $table->integer('display_order')->default(0);
+            $table->timestamps();
         });
     }
 
