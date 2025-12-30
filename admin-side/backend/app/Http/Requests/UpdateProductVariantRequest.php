@@ -24,8 +24,8 @@ class UpdateProductVariantRequest extends FormRequest
         $variantId = $this->route('id') ?? $this->route('variant');
         return [
             'product_id' => 'sometimes|required|exists:products,id',
-            'sku' => 'sometimes|required|string|unique:product_variants,sku,' . $variantId,
-            'size' => 'nullable|string|max:20',
+            'sku' => 'sometimes|nullable|string|unique:product_variants,sku,' . $variantId,
+            'size_id' => 'nullable|exists:sizes,id',
             'color' => 'nullable|string|max:100',
             'price' => 'sometimes|required|numeric|min:0',
             'original_price' => 'nullable|numeric|min:0',

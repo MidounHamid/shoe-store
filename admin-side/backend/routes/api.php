@@ -11,6 +11,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProductFeatureController;
+use App\Http\Controllers\SizeController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CartItemController;
@@ -48,6 +49,7 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('addresses', AddressController::class);
     Route::apiResource('products', ProductController::class);
+    Route::apiResource('sizes', SizeController::class);
     Route::apiResource('product-variants', ProductVariantController::class);
     Route::apiResource('product-images', ProductImageController::class);
     Route::apiResource('product-features', ProductFeatureController::class);

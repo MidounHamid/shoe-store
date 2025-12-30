@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\Size; // Import the Size model
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -18,9 +19,10 @@ class ProductVariantSeeder extends Seeder
 
         foreach ($products as $product) {
             $variants = [];
+            $productName = strtolower($product->name);
 
-            // Electronics products - different storage/color options
-            if (str_contains(strtolower($product->name), 'iphone') || str_contains(strtolower($product->name), 'samsung')) {
+            // Electronics products
+            if (str_contains($productName, 'iphone') || str_contains($productName, 'samsung')) {
                 $colors = ['Black', 'White', 'Blue', 'Purple'];
                 $storages = ['128GB', '256GB', '512GB'];
 
@@ -29,7 +31,7 @@ class ProductVariantSeeder extends Seeder
                         $variants[] = [
                             'product_id' => $product->id,
                             'sku' => strtoupper(Str::substr($product->name, 0, 3)) . '-' . Str::substr($color, 0, 3) . '-' . $storage,
-                            'size' => $storage,
+                            'size_id' => $this->getSizeId($storage), // Changed from 'size'
                             'color' => $color,
                             'price' => rand(699, 1299),
                             'original_price' => rand(799, 1399),
@@ -38,15 +40,15 @@ class ProductVariantSeeder extends Seeder
                     }
                 }
             }
-            // Laptops - different configurations
-            elseif (str_contains(strtolower($product->name), 'macbook') || str_contains(strtolower($product->name), 'laptop') || str_contains(strtolower($product->name), 'xps') || str_contains(strtolower($product->name), 'thinkpad') || str_contains(strtolower($product->name), 'spectre')) {
+            // Laptops
+            elseif (str_contains($productName, 'macbook') || str_contains($productName, 'laptop') || str_contains($productName, 'xps')) {
                 $configs = ['8GB RAM / 256GB SSD', '16GB RAM / 512GB SSD', '32GB RAM / 1TB SSD'];
 
                 foreach ($configs as $index => $config) {
                     $variants[] = [
                         'product_id' => $product->id,
                         'sku' => strtoupper(Str::substr($product->name, 0, 3)) . '-CFG-' . ($index + 1),
-                        'size' => null,
+                        'size_id' => $this->getSizeId($config), // Changed from 'size'
                         'color' => 'Silver',
                         'price' => rand(999, 2499),
                         'original_price' => rand(1099, 2699),
@@ -54,8 +56,8 @@ class ProductVariantSeeder extends Seeder
                     ];
                 }
             }
-            // Shoes - different sizes
-            elseif (str_contains(strtolower($product->name), 'shoe') || str_contains(strtolower($product->name), 'air') || str_contains(strtolower($product->name), 'ultraboost')) {
+            // Shoes
+            elseif (str_contains($productName, 'shoe') || str_contains($productName, 'air') || str_contains($productName, 'ultraboost')) {
                 $sizes = ['7', '8', '9', '10', '11', '12'];
                 $colors = ['Black', 'White', 'Blue'];
 
@@ -64,7 +66,7 @@ class ProductVariantSeeder extends Seeder
                         $variants[] = [
                             'product_id' => $product->id,
                             'sku' => strtoupper(Str::substr($product->name, 0, 3)) . '-' . Str::substr($color, 0, 3) . '-' . $size,
-                            'size' => $size,
+                            'size_id' => $this->getSizeId($size), // Changed from 'size'
                             'color' => $color,
                             'price' => rand(79, 199),
                             'original_price' => rand(99, 249),
@@ -73,31 +75,15 @@ class ProductVariantSeeder extends Seeder
                     }
                 }
             }
-            // Cameras - different lens kits
-            elseif (str_contains(strtolower($product->name), 'camera') || str_contains(strtolower($product->name), 'eos') || str_contains(strtolower($product->name), 'd850')) {
-                $kits = ['Body Only', 'With 24-70mm Lens', 'With 70-200mm Lens'];
-
-                foreach ($kits as $index => $kit) {
-                    $variants[] = [
-                        'product_id' => $product->id,
-                        'sku' => strtoupper(Str::substr($product->name, 0, 3)) . '-KIT-' . ($index + 1),
-                        'size' => null,
-                        'color' => 'Black',
-                        'price' => rand(1999, 3999),
-                        'original_price' => rand(2199, 4299),
-                        'stock' => rand(3, 20),
-                    ];
-                }
-            }
-            // TVs - different sizes
-            elseif (str_contains(strtolower($product->name), 'tv') || str_contains(strtolower($product->name), 'oled')) {
+            // TVs
+            elseif (str_contains($productName, 'tv') || str_contains($productName, 'oled')) {
                 $sizes = ['55"', '65"', '77"'];
 
                 foreach ($sizes as $size) {
                     $variants[] = [
                         'product_id' => $product->id,
                         'sku' => strtoupper(Str::substr($product->name, 0, 3)) . '-' . str_replace('"', '', $size),
-                        'size' => $size,
+                        'size_id' => $this->getSizeId($size), // Changed from 'size'
                         'color' => 'Black',
                         'price' => rand(999, 2999),
                         'original_price' => rand(1199, 3499),
@@ -105,23 +91,7 @@ class ProductVariantSeeder extends Seeder
                     ];
                 }
             }
-            // Headphones - different colors
-            elseif (str_contains(strtolower($product->name), 'headphone') || str_contains(strtolower($product->name), 'wh-')) {
-                $colors = ['Black', 'Silver', 'Blue'];
-
-                foreach ($colors as $color) {
-                    $variants[] = [
-                        'product_id' => $product->id,
-                        'sku' => strtoupper(Str::substr($product->name, 0, 3)) . '-' . Str::substr($color, 0, 3),
-                        'size' => null,
-                        'color' => $color,
-                        'price' => rand(199, 399),
-                        'original_price' => rand(249, 449),
-                        'stock' => rand(10, 50),
-                    ];
-                }
-            }
-            // Clothing - different sizes
+            // Default (Clothing)
             else {
                 $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
                 $colors = ['Black', 'White', 'Blue', 'Gray'];
@@ -131,7 +101,7 @@ class ProductVariantSeeder extends Seeder
                         $variants[] = [
                             'product_id' => $product->id,
                             'sku' => strtoupper(Str::substr($product->name, 0, 3)) . '-' . Str::substr($color, 0, 3) . '-' . $size,
-                            'size' => $size,
+                            'size_id' => $this->getSizeId($size), // Changed from 'size'
                             'color' => $color,
                             'price' => rand(19, 99),
                             'original_price' => rand(29, 129),
@@ -141,10 +111,20 @@ class ProductVariantSeeder extends Seeder
                 }
             }
 
-            // Create variants
             foreach ($variants as $variant) {
                 ProductVariant::create($variant);
             }
         }
+    }
+
+    /**
+     * Helper to get or create the size ID
+     */
+    private function getSizeId($name)
+    {
+        if (!$name) return null;
+
+        $size = Size::firstOrCreate(['name' => $name]);
+        return $size->id;
     }
 }

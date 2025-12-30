@@ -23,8 +23,8 @@ class StoreProductVariantRequest extends FormRequest
     {
         return [
             'product_id' => 'required|exists:products,id',
-            'sku' => 'required|string|unique:product_variants,sku',
-            'size' => 'nullable|string|max:20',
+            'sku' => 'nullable|string|unique:product_variants,sku',
+            'size_id' => 'nullable|exists:sizes,id',
             'color' => 'nullable|string|max:100',
             'price' => 'required|numeric|min:0',
             'original_price' => 'nullable|numeric|min:0',

@@ -26,6 +26,7 @@ class StoreProductImageRequest extends FormRequest
             'variant_id' => 'nullable|exists:product_variants,id',
             'image_url' => 'required|string|max:500',
             'display_order' => 'sometimes|integer|min:0',
+            'is_principal' => 'sometimes|boolean',
         ];
     }
 }

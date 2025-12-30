@@ -67,6 +67,16 @@ export const MENU = [
     ],
   },
   {
+    title: "Sizes",
+    icon: <Layers />,
+    service: "sizes",
+    pathname: "sizes",
+    items: [
+      { title: "List Sizes", url: "/sizes/list", method: "read" },
+      { title: "Add Size", url: "/sizes/add", method: "create" },
+    ],
+  },
+  {
     title: "Tags",
     icon: <Tag />,
     service: "tags",

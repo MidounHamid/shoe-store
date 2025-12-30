@@ -43,11 +43,19 @@ class ProductImageController extends Controller
     public function store(StoreProductImageRequest $request)
     {
 
+        // If this is set as principal, unset other principal images for this product
+        if ($request->get('is_principal', false)) {
+            DB::table('product_images')
+                ->where('product_id', $request->product_id)
+                ->update(['is_principal' => false]);
+        }
+
         $data = [
             'product_id' => $request->product_id,
             'variant_id' => $request->variant_id,
             'image_url' => $request->image_url,
             'display_order' => $request->get('display_order', 0),
+            'is_principal' => $request->get('is_principal', false),
         ];
 
         $id = DB::table('product_images')->insertGetId($data);
@@ -91,10 +99,22 @@ class ProductImageController extends Controller
 
         $data = [];
 
+        // If this is set as principal, unset other principal images for this product
+        if ($request->has('is_principal') && $request->is_principal) {
+            $currentImage = DB::table('product_images')->where('id', $id)->first();
+            if ($currentImage) {
+                DB::table('product_images')
+                    ->where('product_id', $currentImage->product_id)
+                    ->where('id', '!=', $id)
+                    ->update(['is_principal' => false]);
+            }
+        }
+
         if ($request->has('product_id')) $data['product_id'] = $request->product_id;
         if ($request->has('variant_id')) $data['variant_id'] = $request->variant_id;
         if ($request->has('image_url')) $data['image_url'] = $request->image_url;
         if ($request->has('display_order')) $data['display_order'] = $request->display_order;
+        if ($request->has('is_principal')) $data['is_principal'] = $request->is_principal;
 
         DB::table('product_images')->where('id', $id)->update($data);
         $image = DB::table('product_images')

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Layout } from "@/components/layouts/layout"
 import DataTable from "@/components/data-table"
 import { type ColumnDef } from "@tanstack/react-table"
@@ -67,16 +67,22 @@ export default function OrdersListPage() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     fetchOrders()
-  }, [])
+  }, [searchParams])
 
   const fetchOrders = async () => {
     try {
       setLoading(true)
       const token = getAuthToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders`, {
+      const status = searchParams.get("status")
+      const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/orders`)
+      if (status) {
+        url.searchParams.append("status", status)
+      }
+      const response = await fetch(url.toString(), {
         headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
       })
       if (!response.ok) throw new Error("Failed to fetch orders")

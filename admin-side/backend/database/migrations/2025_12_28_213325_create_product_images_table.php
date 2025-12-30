@@ -11,13 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_images', function (Blueprint $table) {
+Schema::create('product_images', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->foreignId('variant_id')->nullable()
                 ->constrained('product_variants')->nullOnDelete();
             $table->string('image_url', 500);
             $table->integer('display_order')->default(0);
+
+            // REMOVED ->after('display_order') - this only works in Schema::table
+            $table->boolean('is_principal')->default(false);
+
             $table->timestamps();
         });
     }

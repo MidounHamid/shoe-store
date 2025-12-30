@@ -13,17 +13,24 @@ return new class extends Migration
     {
         Schema::create('product_variants', function (Blueprint $table) {
             $table->id();
+            // product_id comes first
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->string('sku')->unique();
-            $table->string('size',20)->nullable();
-            $table->string('color',100)->nullable();
-            $table->decimal('price',10,2);
-            $table->decimal('original_price',10,2)->nullable();
+
+            // size_id follows product_id naturally (no ->after() needed)
+            $table->foreignId('size_id')->nullable()
+                ->constrained('sizes')->nullOnDelete();
+
+            // SKU and other details
+            $table->string('sku')->nullable()->unique();
+            $table->string('color', 100)->nullable();
+            $table->decimal('price', 10, 2);
+            $table->decimal('original_price', 10, 2)->nullable();
             $table->integer('stock')->default(0);
             $table->json('attributes')->nullable();
             $table->timestamps();
 
-            $table->unique(['product_id','size','color']);
+            // Unique constraint
+            $table->unique(['product_id', 'size_id', 'color'], 'pv_product_size_color_unique');
         });
     }
 

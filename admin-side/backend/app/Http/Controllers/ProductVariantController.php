@@ -16,7 +16,8 @@ class ProductVariantController extends Controller
     {
         $query = DB::table('product_variants')
             ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
-            ->select('product_variants.*', 'products.name as product_name');
+            ->leftJoin('sizes', 'product_variants.size_id', '=', 'sizes.id')
+            ->select('product_variants.*', 'products.name as product_name', 'sizes.name as size_name');
 
         // Filter by product
         if ($request->has('product_id')) {
@@ -44,11 +45,20 @@ class ProductVariantController extends Controller
      */
     public function store(StoreProductVariantRequest $request)
     {
+        // Auto-generate SKU if not provided
+        $sku = $request->sku;
+        if (!$sku) {
+            $lastVariant = DB::table('product_variants')
+                ->orderBy('id', 'desc')
+                ->first();
+            $nextId = $lastVariant ? $lastVariant->id + 1 : 1;
+            $sku = 'SKU-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
+        }
 
         $data = [
             'product_id' => $request->product_id,
-            'sku' => $request->sku,
-            'size' => $request->size,
+            'sku' => $sku,
+            'size_id' => $request->size_id,
             'color' => $request->color,
             'price' => $request->price,
             'original_price' => $request->original_price,
@@ -61,7 +71,8 @@ class ProductVariantController extends Controller
         $id = DB::table('product_variants')->insertGetId($data);
         $variant = DB::table('product_variants')
             ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
-            ->select('product_variants.*', 'products.name as product_name')
+            ->leftJoin('sizes', 'product_variants.size_id', '=', 'sizes.id')
+            ->select('product_variants.*', 'products.name as product_name', 'sizes.name as size_name')
             ->where('product_variants.id', $id)
             ->first();
 
@@ -79,7 +90,8 @@ class ProductVariantController extends Controller
     {
         $variant = DB::table('product_variants')
             ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
-            ->select('product_variants.*', 'products.name as product_name')
+            ->leftJoin('sizes', 'product_variants.size_id', '=', 'sizes.id')
+            ->select('product_variants.*', 'products.name as product_name', 'sizes.name as size_name')
             ->where('product_variants.id', $id)
             ->first();
 
@@ -111,7 +123,7 @@ class ProductVariantController extends Controller
 
         if ($request->has('product_id')) $data['product_id'] = $request->product_id;
         if ($request->has('sku')) $data['sku'] = $request->sku;
-        if ($request->has('size')) $data['size'] = $request->size;
+        if ($request->has('size_id')) $data['size_id'] = $request->size_id;
         if ($request->has('color')) $data['color'] = $request->color;
         if ($request->has('price')) $data['price'] = $request->price;
         if ($request->has('original_price')) $data['original_price'] = $request->original_price;
@@ -121,7 +133,8 @@ class ProductVariantController extends Controller
         DB::table('product_variants')->where('id', $id)->update($data);
         $variant = DB::table('product_variants')
             ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
-            ->select('product_variants.*', 'products.name as product_name')
+            ->leftJoin('sizes', 'product_variants.size_id', '=', 'sizes.id')
+            ->select('product_variants.*', 'products.name as product_name', 'sizes.name as size_name')
             ->where('product_variants.id', $id)
             ->first();
 

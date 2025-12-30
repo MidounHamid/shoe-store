@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Layout } from "@/components/layouts/layout"
 import DataTable from "@/components/data-table"
 import { type ColumnDef } from "@tanstack/react-table"
@@ -58,16 +58,22 @@ export default function PaymentsListPage() {
   const [data, setData] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     fetchPayments()
-  }, [])
+  }, [searchParams])
 
   const fetchPayments = async () => {
     try {
       setLoading(true)
       const token = getAuthToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments`, {
+      const status = searchParams.get("status")
+      const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/payments`)
+      if (status) {
+        url.searchParams.append("status", status)
+      }
+      const response = await fetch(url.toString(), {
         headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
       })
       if (!response.ok) throw new Error("Failed to fetch payments")
