@@ -6,6 +6,7 @@ use App\Models\Address;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class OrderSeeder extends Seeder
@@ -15,7 +16,12 @@ class OrderSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = User::where('role', 'customer')->get();
+        $users = DB::table('users')
+    ->join('roles', 'users.role_id', '=', 'roles.id') // Link users to roles
+    ->where('roles.name', 'customer')               // Filter by the name in roles table
+    ->select('users.*')                              // Get user data only
+    ->limit(5)                                       // Matches your error log "limit 5"
+    ->get();
         $statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
         $paymentStatuses = ['pending', 'paid', 'failed', 'refunded'];
 

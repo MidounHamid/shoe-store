@@ -1,46 +1,94 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { toast } from "@/components/ui/use-toast"
-import { getAuthToken } from "@/lib/auth"
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "@/components/ui/use-toast";
+import { getAuthToken } from "@/lib/auth";
 
 const userSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters").optional().or(z.literal("")),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .optional()
+    .or(z.literal("")),
   first_name: z.string().optional(),
   last_name: z.string().optional(),
   phone: z.string().optional(),
-  role: z.enum(["customer", "admin"]),
+  role_id: z.number().int().positive(),
   email_verified: z.boolean().default(false),
-})
+});
 
-type UserFormValues = z.infer<typeof userSchema>
+type UserFormValues = z.infer<typeof userSchema>;
+
+interface Role {
+  id: number;
+  name: string;
+}
 
 interface UserFormProps {
   initialData?: {
-    id: number
-    email: string
-    first_name: string | null
-    last_name: string | null
-    phone: string | null
-    role: string
-    email_verified: boolean
-  }
+    id: number;
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+    role: string;
+    email_verified: boolean;
+  };
 }
 
 export default function UserForm({ initialData }: UserFormProps) {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const isEdit = !!initialData
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const isEdit = !!initialData;
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const token = getAuthToken();
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/roles`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setRoles(data.data || data);
+        }
+      } catch (error) {
+        console.error("Error fetching roles:", error);
+      }
+    };
+
+    fetchRoles();
+  }, []);
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
@@ -50,32 +98,32 @@ export default function UserForm({ initialData }: UserFormProps) {
       first_name: initialData?.first_name || "",
       last_name: initialData?.last_name || "",
       phone: initialData?.phone || "",
-      role: (initialData?.role as "customer" | "admin") || "customer",
+      role_id: 2, // Default to customer role (assuming id 2)
       email_verified: initialData?.email_verified || false,
     },
-  })
+  });
 
   const onSubmit = async (values: UserFormValues) => {
     try {
-      setLoading(true)
-      const token = getAuthToken()
+      setLoading(true);
+      const token = getAuthToken();
       const url = isEdit
         ? `${process.env.NEXT_PUBLIC_API_URL}/api/users/${initialData.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/users`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/users`;
 
       const body: any = {
         email: values.email,
         first_name: values.first_name || null,
         last_name: values.last_name || null,
         phone: values.phone || null,
-        role: values.role,
+        role_id: values.role_id,
         email_verified: values.email_verified,
-      }
+      };
 
       // Only include password if it's provided (for edit) or required (for create)
       if (!isEdit || values.password) {
         if (values.password) {
-          body.password = values.password
+          body.password = values.password;
         }
       }
 
@@ -87,30 +135,32 @@ export default function UserForm({ initialData }: UserFormProps) {
           Accept: "application/json",
         },
         body: JSON.stringify(body),
-      })
+      });
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Failed to save user")
+        const error = await response.json();
+        throw new Error(error.message || "Failed to save user");
       }
 
       toast({
         title: "Success",
-        description: isEdit ? "User updated successfully" : "User created successfully",
-      })
+        description: isEdit
+          ? "User updated successfully"
+          : "User created successfully",
+      });
 
-      router.push("/users/list")
+      router.push("/users/list");
     } catch (error: any) {
-      console.error("Error saving user:", error)
+      console.error("Error saving user:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to save user",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Form {...form}>
@@ -123,7 +173,11 @@ export default function UserForm({ initialData }: UserFormProps) {
               <FormItem>
                 <FormLabel>Email *</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="user@example.com" {...field} />
+                  <Input
+                    type="email"
+                    placeholder="user@example.com"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -135,9 +189,19 @@ export default function UserForm({ initialData }: UserFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{isEdit ? "New Password (optional)" : "Password *"}</FormLabel>
+                <FormLabel>
+                  {isEdit ? "New Password (optional)" : "Password *"}
+                </FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder={isEdit ? "Leave blank to keep current" : "Min 8 characters"} {...field} />
+                  <Input
+                    type="password"
+                    placeholder={
+                      isEdit
+                        ? "Leave blank to keep current"
+                        : "Min 8 characters"
+                    }
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -188,19 +252,25 @@ export default function UserForm({ initialData }: UserFormProps) {
 
           <FormField
             control={form.control}
-            name="role"
+            name="role_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Role *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={(value) => field.onChange(Number(value))}
+                  value={field.value?.toString()}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="customer">Customer</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    {roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id.toString()}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -237,6 +307,5 @@ export default function UserForm({ initialData }: UserFormProps) {
         </div>
       </form>
     </Form>
-  )
+  );
 }
-

@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\ProductImageController;
@@ -24,6 +25,8 @@ use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\ReviewVoteController;
 use App\Http\Controllers\CountController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RoleController;
+use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -40,11 +43,9 @@ Route::middleware('auth:api')->group(function () {
     // Counts for sidebar badges
     Route::get('/counts', [CountController::class, 'getCounts']);
 
-    // DataTables
-    Route::get('/datatable/{table}', [DataTableController::class, 'index']);
-
     // Resource routes
     Route::apiResource('users', UserController::class);
+    Route::apiResource('roles', RoleController::class);
     Route::apiResource('brands', BrandController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('addresses', AddressController::class);
@@ -68,7 +69,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/notifications-unread', [NotificationController::class, 'unreadCount']);
 
 
-       // Notifications
+    // Notifications
     Route::resource('notifications', NotificationController::class);
 
 
@@ -78,4 +79,20 @@ Route::middleware('auth:api')->group(function () {
 
     // Additional routes
     Route::post('/favorites/remove-by-user-product', [FavoriteController::class, 'removeByUserAndProduct']);
+
+
+
+    //admin functions
+    Route::prefix('admin')->middleware(AdminMiddleware::class)->group(function () {
+        Route::get('/users', [AdminController::class, "showUsersBrief"]);
+        // Route::get('/users/{id}/activity-log', [AdminController::class, 'getUserActivityLog']);
+        Route::get("/users/{id}", [AdminController::class, "showUser"]);
+        Route::post('/users', [AdminController::class, "createUser"]);
+        Route::post('/roles', [AdminController::class, "createRole"]);
+        Route::put('/roles/{id}', [AdminController::class, 'updateRole']);
+        Route::put("/users/{id}", [AdminController::class, "updateUser"]);
+        Route::delete('/users', [AdminController::class, 'destroyMultipleUsers']);
+        Route::delete('/roles', [AdminController::class, 'destroyMultipleRoles']);
+        Route::post("/reset-password/{id}", [AdminController::class, "resetUserPassword"]);
+    });
 });

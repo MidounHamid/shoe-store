@@ -6,6 +6,7 @@ use App\Models\Favorite;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class FavoriteSeeder extends Seeder
 {
@@ -14,7 +15,12 @@ class FavoriteSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = User::where('role', 'customer')->get();
+        $users = DB::table('users')
+    ->join('roles', 'users.role_id', '=', 'roles.id') // Link users to roles
+    ->where('roles.name', 'customer')               // Filter by the name in roles table
+    ->select('users.*')                              // Get user data only
+    ->limit(5)                                       // Matches your error log "limit 5"
+    ->get();
         $products = Product::all();
 
         foreach ($users as $user) {

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Check, X } from "lucide-react";
 
-const services = ["home", "client", "vehicule","visite", "contract", "reservation", "intervention", "charge", "rapport","retour_contract","assurance","vidange","vignette",'reservation_online', 'mail', 'settings'];
+const services = ["dashboard", "users", "products", "brands", "categories", "sizes", "tags", "orders", "payments", "carts", "favorites", "reviews", "addresses", "settings"];
 
 interface RoleData {
     id: number,
@@ -66,7 +66,7 @@ export default function RoleDetails({ initialData }: { initialData: RoleData }) 
                                 <TableCell className="font-medium capitalize">{service.replace(/_/g, " ")}</TableCell>
 
                                 {["read", "create", "update", "delete"].map((perm) => {
-                                    if ((service === "home" || service === "rapport") && perm !== "read") {
+                                    if (service === "dashboard" && perm !== "read") {
                                         return (
                                             <TableCell key={perm} className="text-center text-gray-400">--</TableCell>
                                         );

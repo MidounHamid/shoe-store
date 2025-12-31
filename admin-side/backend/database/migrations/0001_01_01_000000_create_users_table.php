@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
             $table->string('phone', 30)->nullable();
-            $table->enum('role', ['customer', 'admin'])->default('customer');
+            $table->foreignId("role_id")->nullable()->constrained();
             $table->boolean('email_verified')->default(false);
             $table->timestamps();
         });

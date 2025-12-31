@@ -36,7 +36,7 @@ export default function ShowRolePage() {
     useEffect(() => {
         async function fetchCharge() {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/roles/${id}`, {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/roles/${id}`, {
                     headers: {
                         Authorization: `Bearer ${getAuthToken()}`,
                         Accept: "application/json",

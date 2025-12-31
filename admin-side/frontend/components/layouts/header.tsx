@@ -27,6 +27,7 @@ import { LogOut, User} from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { ModeToggle } from "../mode-toggle"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Loading } from "@/components/ui/loading"
 import NotificationBell from "@/components/notification/NotificationBell";
 
@@ -40,6 +41,7 @@ export function Header({ sidebarOpen, setSidebarOpen, setMobileMenuOpen }: Heade
   // const [notifications] = useState(10)
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const router = useRouter()
 
   const { user, logout } = useAuth()
 
@@ -172,7 +174,7 @@ export function Header({ sidebarOpen, setSidebarOpen, setMobileMenuOpen }: Heade
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuContent className="w-56" align="end">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{user?.name}</p>
@@ -180,31 +182,27 @@ export function Header({ sidebarOpen, setSidebarOpen, setMobileMenuOpen }: Heade
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <Link href="/agence">
-                  <DropdownMenuItem>
-                    <Home className="mr-2 h-4 w-4" />
-                    <span>Agence</span>
-                  </DropdownMenuItem>
-                </Link>
-                {user.role?.name === "admin" && <Link href="/admin">
-                  <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/agence")}>
+                  <Home className="mr-2 h-4 w-4" />
+                  <span>Agence</span>
+                </DropdownMenuItem>
+                {user.role?.name === "admin" && (
+                  <DropdownMenuItem onClick={() => router.push("/admin?showForm=true")}>
                     <Users className="mr-2 h-4 w-4" />
                     <span>Gestion Utilisateurs</span>
                   </DropdownMenuItem>
-                </Link>}
+                )}
                 <DropdownMenuSeparator />
-                <Link href="/profile">
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                </Link>
-                {!!user.role?.permissions.find(p => p.service === "settings")?.read && <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <Link href="/settings">
+                <DropdownMenuItem onClick={() => router.push("/profile")}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                {!!user.role?.permissions.find(p => p.service === "settings")?.read && (
+                  <DropdownMenuItem onClick={() => router.push("/settings")}>
+                    <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
-                  </Link>
-                </DropdownMenuItem>}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"

@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         // Base tables (no dependencies)
         $this->call([
+            RoleSeeder::class,
             BrandSeeder::class,
             CategorySeeder::class,
             TagSeeder::class,

@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class ProductReviewSeeder extends Seeder
 {
@@ -15,7 +16,11 @@ class ProductReviewSeeder extends Seeder
     public function run(): void
     {
         $products = Product::all();
-        $users = User::where('role', 'customer')->get();
+        $users = DB::table('users')
+            ->join('roles', 'users.role_id', '=', 'roles.id') // Link users to roles
+            ->where('roles.name', 'customer')               // Filter by the name in roles table
+            ->select('users.*')                              // Get user data only
+            ->get();
 
         $reviewTitles = [
             'Great product!',
@@ -66,4 +71,3 @@ class ProductReviewSeeder extends Seeder
         }
     }
 }
-

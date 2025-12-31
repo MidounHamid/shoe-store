@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -13,6 +14,9 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        $adminRole = Role::where('name', 'admin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+
         // Admin user
         User::create([
             'first_name' => 'Admin',
@@ -20,7 +24,7 @@ class UserSeeder extends Seeder
             'email' => 'admin@gmail.com',
             'password' => Hash::make('admin@gmail.com'),
             'phone' => '+1234567890',
-            'role' => 'admin',
+            'role_id' => $adminRole->id,
             'email_verified' => true,
         ]);
 
@@ -92,10 +96,9 @@ class UserSeeder extends Seeder
             User::create([
                 ...$customer,
                 'password' => Hash::make('password'),
-                'role' => 'customer',
+                'role_id' => $customerRole->id,
                 'email_verified' => true,
             ]);
         }
     }
 }
-

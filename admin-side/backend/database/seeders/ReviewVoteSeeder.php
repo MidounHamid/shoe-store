@@ -6,6 +6,7 @@ use App\Models\ProductReview;
 use App\Models\ReviewVote;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class ReviewVoteSeeder extends Seeder
 {
@@ -15,7 +16,11 @@ class ReviewVoteSeeder extends Seeder
     public function run(): void
     {
         $reviews = ProductReview::all();
-        $users = User::where('role', 'customer')->get();
+        $users = DB::table('users')
+    ->join('roles', 'users.role_id', '=', 'roles.id') // Link users to roles
+    ->where('roles.name', 'customer')               // Filter by the name in roles table
+    ->select('users.*')                              // Get user data only
+    ->get();
 
         foreach ($reviews as $review) {
             // Each review gets 0-5 votes

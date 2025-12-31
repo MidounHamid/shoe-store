@@ -38,10 +38,10 @@ const userColumns: ColumnDef<User>[] = [
     header: "Email",
   },
   {
-    accessorKey: "email_verified_at",
+    accessorKey: "email_verified",
     header: "Is Verified",
     cell: ({ row }) => {
-      const date = row.getValue("email_verified_at");
+      const date = row.getValue("email_verified");
 
       return date ? (
         <Badge

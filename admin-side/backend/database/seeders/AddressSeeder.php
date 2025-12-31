@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Address;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class AddressSeeder extends Seeder
 {
@@ -13,8 +14,11 @@ class AddressSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = User::where('role', 'customer')->get();
-
+$customers = DB::table('users')
+    ->join('roles', 'users.role_id', '=', 'roles.id')
+    ->where('roles.name', 'customer')
+    ->select('users.*') // This ensures you only get user columns
+    ->get();
         $addresses = [
             [
                 'label' => 'Home',
@@ -73,7 +77,7 @@ class AddressSeeder extends Seeder
             ],
         ];
 
-        foreach ($users as $index => $user) {
+        foreach ($customers as $index => $user) {
             if (isset($addresses[$index])) {
                 Address::create([
                     ...$addresses[$index],
