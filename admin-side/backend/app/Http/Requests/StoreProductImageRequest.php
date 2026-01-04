@@ -6,27 +6,31 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreProductImageRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
+    public function authorize()
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
-    public function rules(): array
+    public function rules()
     {
         return [
             'product_id' => 'required|exists:products,id',
             'variant_id' => 'nullable|exists:product_variants,id',
-            'image_url' => 'required|string|max:500',
-            'display_order' => 'sometimes|integer|min:0',
-            'is_principal' => 'sometimes|boolean',
+            'display_order' => 'integer|min:0|max:999',
+            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+'second_images' => 'nullable|array',
+        'second_images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'main_image.image' => 'The main image must be an image file',
+            'main_image.mimes' => 'The main image must be a file of type: jpeg, png, jpg, gif, webp',
+            'main_image.max' => 'The main image may not be greater than 5MB',
+            'second_images.image' => 'The secondary image must be an image file',
+            'second_images.mimes' => 'The secondary image must be a file of type: jpeg, png, jpg, gif, webp',
+            'second_images.max' => 'The secondary image may not be greater than 5MB',
         ];
     }
 }

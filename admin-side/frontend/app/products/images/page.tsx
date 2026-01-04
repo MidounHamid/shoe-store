@@ -17,9 +17,9 @@ export type ProductImage = {
   product_id: number
   product_name?: string
   variant_id: number | null
-  image_url: string
+  main_image: string | null  // Full URL from Controller
+  second_images: string[] | null  // Array of full URLs from Controller
   display_order: number
-  is_principal: boolean
   created_at: string
   updated_at: string
 }
@@ -35,38 +35,65 @@ const columns: ColumnDef<ProductImage>[] = [
     cell: ({ row }) => row.original.product_name || `Product #${row.original.product_id}`,
   },
   {
-    accessorKey: "variant_id",
-    header: "Variant ID",
-    cell: ({ row }) => row.original.variant_id || "-",
-  },
-  {
-    accessorKey: "image_url",
-    header: "Image",
+    accessorKey: "main_image",
+    header: "Main Image",
     cell: ({ row }) => (
-      <div className="w-16 h-16 relative border rounded overflow-hidden">
-        <Image
-          src={row.original.image_url}
-          alt="Product image"
-          fill
-          className="object-cover"
-          sizes="64px"
-          unoptimized
-        />
+      <div className="w-16 h-16 relative border rounded overflow-hidden bg-gray-50">
+        {row.original.main_image ? (
+          <Image
+            src={row.original.main_image}
+            alt="Main"
+            fill
+            className="object-contain"
+            sizes="64px"
+            unoptimized
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full text-[10px] text-gray-400">No Image</div>
+        )}
       </div>
     ),
   },
   {
-    accessorKey: "display_order",
-    header: "Display Order",
+    accessorKey: "second_images",
+    header: "Secondary Images",
+    cell: ({ row }) => {
+      const images = row.original.second_images
+      const count = Array.isArray(images) ? images.length : 0
+      
+      return (
+        <div className="flex items-center gap-2">
+          <Badge variant={count > 0 ? "default" : "secondary"}>
+            {count} {count === 1 ? 'image' : 'images'}
+          </Badge>
+          {count > 0 && (
+            <div className="flex -space-x-2">
+              {images!.slice(0, 3).map((url, idx) => (
+                <div key={idx} className="w-8 h-8 relative border-2 border-white rounded-full overflow-hidden bg-gray-50">
+                  <Image
+                    src={url}
+                    alt={`Thumb ${idx}`}
+                    fill
+                    className="object-cover"
+                    sizes="32px"
+                    unoptimized
+                  />
+                </div>
+              ))}
+              {count > 3 && (
+                <div className="w-8 h-8 flex items-center justify-center border-2 border-white rounded-full bg-gray-200 text-[10px] font-semibold">
+                  +{count - 3}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )
+    },
   },
   {
-    accessorKey: "is_principal",
-    header: "Principal",
-    cell: ({ row }) => (
-      <Badge variant={row.original.is_principal ? "default" : "secondary"}>
-        {row.original.is_principal ? "Yes" : "No"}
-      </Badge>
-    ),
+    accessorKey: "display_order",
+    header: "Order",
   },
   {
     accessorKey: "created_at",
@@ -100,8 +127,8 @@ export default function ProductImagesPage() {
       if (!response.ok) throw new Error("Failed to fetch product images")
 
       const result = await response.json()
-      const images = result.data || result
-      setData(Array.isArray(images) ? images : [])
+      const images = Array.isArray(result) ? result : (result.data || [])
+      setData(images)
     } catch (error) {
       console.error("Error fetching product images:", error)
       toast({
@@ -152,10 +179,9 @@ export default function ProductImagesPage() {
       setData((prev) => prev.filter((img) => img.id !== imageToDelete.id))
       toast({
         title: "Success",
-        description: "Product image deleted successfully",
+        description: "Image set deleted successfully",
       })
     } catch (error) {
-      console.error("Error deleting product image:", error)
       toast({
         title: "Error",
         description: "Failed to delete product image",
@@ -174,51 +200,32 @@ export default function ProductImagesPage() {
           columns={columns}
           data={data}
           loading={loading}
-          searchColumn="image_url"
-          title="Product Images"
-          searchPlaceholder="Search by image URL..."
+          searchColumn="product_name"
+          title="Product Image Management"
+          searchPlaceholder="Search by product name..."
           onViewDetails={handleViewDetails}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onAddRowButton={onAddRowButton}
           service="products"
-          serviceName="Image"
+          serviceName="Image Set"
         />
       </div>
 
-      <Dialog
-        open={openDeleteDialog}
-        onOpenChange={(open) => {
-          if (!open) {
-            setOpenDeleteDialog(false)
-            setImageToDelete(null)
-          }
-        }}
-      >
+      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-red-600">Confirm Deletion</DialogTitle>
+            <DialogTitle className="text-red-600">Delete Image Set?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this product image? This action cannot be undone.
+              This will permanently delete the Main Image and all associated Secondary Images for this entry.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-3 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setOpenDeleteDialog(false)
-                setImageToDelete(null)
-              }}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
-              Yes, Delete
-            </Button>
+            <Button variant="outline" onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDelete}>Confirm Delete</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </Layout>
   )
 }
-

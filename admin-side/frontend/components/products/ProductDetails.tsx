@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Edit } from "lucide-react"
+import { Edit, Image as ImageIcon, Calendar, Tag, Layers } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 
@@ -14,7 +14,8 @@ export type Product = {
   slug: string
   short_description: string | null
   description: string | null
-  default_image: string | null
+  main_image: string | null 
+  second_images?: string[] | null 
   is_active: boolean
   brand_name?: string
   categories?: any[]
@@ -30,98 +31,178 @@ interface ProductDetailsProps {
 export default function ProductDetails({ product }: ProductDetailsProps) {
   const router = useRouter()
 
+  // Helper function to validate URLs to prevent Next.js Image crash
+  const isValidUrl = (url: string | null | undefined) => {
+    if (!url || typeof url !== 'string' || url.trim() === "") return false;
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      // If it's a relative path starting with /, it's valid for Next.js
+      return url.startsWith('/');
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Product Information</CardTitle>
-              <CardDescription>Product details and specifications</CardDescription>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* --- MEDIA SECTION --- */}
+      <div className="lg:col-span-1 space-y-6">
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <ImageIcon className="w-4 h-4 text-blue-500" />
+              Product Media
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="relative aspect-square rounded-md overflow-hidden border bg-muted">
+              {isValidUrl(product.main_image) ? (
+                <Image
+                  src={product.main_image!}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
+                  priority
+                  unoptimized={product.main_image?.startsWith('http')}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                  <ImageIcon className="w-10 h-10 opacity-20" />
+                  <span className="text-xs mt-2">No Image Available</span>
+                </div>
+              )}
             </div>
-            <Button onClick={() => router.push(`/products/edit/${product.id}`)}>
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {product.default_image && (
-            <div className="mb-4">
-              <Image
-                src={product.default_image}
-                alt={product.name}
-                width={300}
-                height={300}
-                className="rounded-lg object-cover"
-              />
+
+            {/* Gallery Grid with fix for empty/invalid strings */}
+            {product.second_images && product.second_images.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {product.second_images
+                  .filter(img => isValidUrl(img)) // Filter out empty strings or bad URLs
+                  .map((img, idx) => (
+                    <div key={idx} className="relative aspect-square rounded border overflow-hidden bg-muted">
+                      <Image
+                        src={img}
+                        alt={`Gallery ${idx + 1}`}
+                        fill
+                        className="object-cover hover:opacity-80 transition-opacity cursor-pointer"
+                        unoptimized // Bypasses domain check to prevent crashing
+                      />
+                    </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6 space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-2">
+                <Calendar className="w-3.5 h-3.5" /> Created:
+              </span>
+              <span className="font-medium">
+                {product.created_at ? new Date(product.created_at).toLocaleDateString() : 'N/A'}
+              </span>
             </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-500">ID</label>
-              <p className="text-lg">{product.id}</p>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-2">
+                <Layers className="w-3.5 h-3.5" /> ID:
+              </span>
+              <span className="font-mono">{product.id}</span>
             </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Name</label>
-              <p className="text-lg">{product.name}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Slug</label>
-              <p className="text-lg">{product.slug}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Brand</label>
-              <p className="text-lg">{product.brand_name || "-"}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Status</label>
-              <div className="mt-1">
-                <Badge variant={product.is_active ? "default" : "secondary"}>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* --- CONTENT SECTION --- */}
+      <div className="lg:col-span-2 space-y-6">
+        <Card className="h-full">
+          <CardHeader className="border-b bg-slate-50/50">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl">{product.name}</CardTitle>
+                <CardDescription className="font-mono text-xs mt-1">
+                  slug: {product.slug}
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge variant={product.is_active ? "default" : "secondary"} className="h-6">
                   {product.is_active ? "Active" : "Inactive"}
                 </Badge>
+                <Button variant="outline" size="sm" onClick={() => router.push(`/products/edit/${product.id}`)}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
               </div>
             </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Created At</label>
-              <p className="text-lg">{new Date(product.created_at).toLocaleString()}</p>
-            </div>
-          </div>
-          {product.short_description && (
-            <div>
-              <label className="text-sm font-medium text-gray-500">Short Description</label>
-              <p className="text-lg mt-1">{product.short_description}</p>
-            </div>
-          )}
-          {product.description && (
-            <div>
-              <label className="text-sm font-medium text-gray-500">Description</label>
-              <p className="text-lg mt-1 whitespace-pre-wrap">{product.description}</p>
-            </div>
-          )}
-          {product.categories && product.categories.length > 0 && (
-            <div>
-              <label className="text-sm font-medium text-gray-500">Categories</label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {product.categories.map((cat: any) => (
-                  <Badge key={cat.id} variant="outline">{cat.name}</Badge>
-                ))}
+          </CardHeader>
+
+          <CardContent className="pt-6 space-y-8">
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Brand</h4>
+                <p className="text-lg font-semibold text-blue-600">{product.brand_name || "Unbranded"}</p>
               </div>
             </div>
-          )}
-          {product.tags && product.tags.length > 0 && (
-            <div>
-              <label className="text-sm font-medium text-gray-500">Tags</label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {product.tags.map((tag: any) => (
-                  <Badge key={tag.id} variant="outline">{tag.name}</Badge>
-                ))}
+
+            <div className="space-y-6">
+              {product.short_description && (
+                <div>
+                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Short Summary</h4>
+                  <p className="text-slate-700 leading-relaxed italic border-l-4 pl-4 border-slate-200">
+                    "{product.short_description}"
+                  </p>
+                </div>
+              )}
+
+              {product.description && (
+                <div>
+                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Full Description</h4>
+                  <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm">
+                    {product.description}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              <div>
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Layers className="w-3.5 h-3.5" /> Categories
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {product.categories && product.categories.length > 0 ? (
+                    product.categories.map((cat) => (
+                      <Badge key={cat.id} variant="secondary" className="rounded-sm">
+                        {cat.name}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-xs text-muted-foreground italic">No categories assigned</span>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Tag className="w-3.5 h-3.5" /> Tags
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {product.tags && product.tags.length > 0 ? (
+                    product.tags.map((tag) => (
+                      <Badge key={tag.id} variant="outline" className="text-xs">
+                        #{tag.name}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-xs text-muted-foreground italic">No tags</span>
+                  )}
+                </div>
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
-

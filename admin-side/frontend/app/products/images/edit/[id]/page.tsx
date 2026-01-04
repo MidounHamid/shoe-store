@@ -10,19 +10,19 @@ import { getAuthToken } from "@/lib/auth"
 import { Loading } from "@/components/ui/loading"
 import { toast } from "@/components/ui/use-toast"
 
-export type ProductImage = {
+export type ProductImageSet = {
   id: number
   product_id: number
   variant_id: number | null
-  image_url: string
+  main_image: string | null // Full URL from Controller
+  second_images: string[] | null // Array of full URLs from Controller
   display_order: number
-  is_principal: boolean
 }
 
 export default function EditProductImagePage() {
   const { id } = useParams()
   const router = useRouter()
-  const [image, setImage] = useState<ProductImage | null>(null)
+  const [imageSet, setImageSet] = useState<ProductImageSet | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -36,15 +36,21 @@ export default function EditProductImagePage() {
           },
         })
 
-        if (!response.ok) throw new Error("Failed to fetch product image")
+        if (!response.ok) throw new Error("Failed to fetch image data")
 
         const data = await response.json()
-        setImage(data)
+        
+        // Ensure second_images is an array
+        if (data.second_images && typeof data.second_images === 'string') {
+          data.second_images = JSON.parse(data.second_images)
+        }
+        
+        setImageSet(data)
       } catch (error) {
-        console.error("Error fetching product image:", error)
+        console.error("Error:", error)
         toast({
           title: "Error",
-          description: "Failed to load product image",
+          description: "Failed to load product images",
           variant: "destructive",
         })
       } finally {
@@ -52,41 +58,31 @@ export default function EditProductImagePage() {
       }
     }
 
-    if (id) {
-      fetchImage()
-    }
+    if (id) fetchImage()
   }, [id])
 
   return (
     <Layout>
       {loading ? (
-        <div className="flex items-center justify-center h-screen">
-          <Loading />
-        </div>
-      ) : image ? (
+        <div className="flex items-center justify-center h-screen"><Loading /></div>
+      ) : imageSet ? (
         <div className="max-w-4xl mx-auto p-6">
           <div className="mb-6 flex items-center gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.back()}
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back
+            <Button variant="outline" onClick={() => router.back()}>
+              <ArrowLeft className="w-5 h-5 mr-2" /> Back
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Edit Product Image</h1>
-              <p className="text-gray-600">Update image information</p>
+              <h1 className="text-2xl font-bold">Edit Product Images</h1>
+              <p className="text-gray-600">Update main and secondary images</p>
             </div>
           </div>
-          <ProductImageForm initialData={image} />
+          <ProductImageForm initialData={imageSet} />
         </div>
       ) : (
         <div className="flex items-center justify-center h-screen">
-          <p className="text-red-500">Product image not found</p>
+          <p className="text-red-500">Image set not found</p>
         </div>
       )}
     </Layout>
   )
 }
-

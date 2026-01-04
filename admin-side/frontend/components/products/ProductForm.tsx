@@ -14,13 +14,13 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "@/components/ui/use-toast"
 import { getAuthToken } from "@/lib/auth"
 
+// 1. Removed main_image from Schema
 const productSchema = z.object({
   brand_id: z.number().min(1, "Brand is required"),
   name: z.string().min(1, "Name is required"),
   slug: z.string().optional(),
   short_description: z.string().max(512).optional().nullable(),
   description: z.string().optional().nullable(),
-  default_image: z.string().optional().nullable(),
   is_active: z.boolean().default(true),
 })
 
@@ -34,7 +34,6 @@ interface ProductFormProps {
     slug: string
     short_description: string | null
     description: string | null
-    default_image: string | null
     is_active: boolean
   }
 }
@@ -77,7 +76,6 @@ export default function ProductForm({ initialData }: ProductFormProps) {
       slug: initialData?.slug || "",
       short_description: initialData?.short_description || "",
       description: initialData?.description || "",
-      default_image: initialData?.default_image || "",
       is_active: initialData?.is_active ?? true,
     },
   })
@@ -90,13 +88,13 @@ export default function ProductForm({ initialData }: ProductFormProps) {
         ? `${process.env.NEXT_PUBLIC_API_URL}/api/products/${initialData.id}`
         : `${process.env.NEXT_PUBLIC_API_URL}/api/products`
 
-      const body = {
+      // 2. Cleaned Payload (Matches your Migration)
+      const productPayload = {
         brand_id: values.brand_id,
         name: values.name,
         slug: values.slug || undefined,
         short_description: values.short_description || null,
         description: values.description || null,
-        default_image: values.default_image || null,
         is_active: values.is_active,
       }
 
@@ -107,7 +105,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(productPayload),
       })
 
       if (!response.ok) {
@@ -121,6 +119,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
       })
 
       router.push("/products/list")
+      router.refresh()
     } catch (error: any) {
       console.error("Error saving product:", error)
       toast({
@@ -135,21 +134,22 @@ export default function ProductForm({ initialData }: ProductFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg border shadow-sm">
+        {/* Adjusted Grid to 3 columns for better fit now that image is gone */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <FormField
             control={form.control}
             name="brand_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Brand *</FormLabel>
+                <FormLabel className="font-semibold">Brand *</FormLabel>
                 <Select
                   onValueChange={(value) => field.onChange(parseInt(value))}
-                  defaultValue={field.value?.toString()}
+                  defaultValue={field.value !== 0 ? field.value?.toString() : undefined}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select brand" />
+                      <SelectValue placeholder="Select a brand" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -170,9 +170,9 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Product Name *</FormLabel>
+                <FormLabel className="font-semibold">Product Name *</FormLabel>
                 <FormControl>
-                  <Input placeholder="Product name" {...field} />
+                  <Input placeholder="e.g. Premium Leather Watch" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -184,28 +184,15 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             name="slug"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Slug (optional)</FormLabel>
+                <FormLabel className="font-semibold">URL Slug</FormLabel>
                 <FormControl>
-                  <Input placeholder="product-slug" {...field} />
+                  <Input placeholder="premium-leather-watch" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          <FormField
-            control={form.control}
-            name="default_image"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Default Image URL</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://example.com/image.jpg" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Main Image URL FormField has been deleted from here */}
         </div>
 
         <FormField
@@ -213,11 +200,13 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           name="short_description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Short Description</FormLabel>
+              <FormLabel className="font-semibold">Short Description</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Brief product description (max 512 characters)"
+                  placeholder="Summary for product cards..."
+                  className="resize-none"
                   {...field}
+                  value={field.value || ''}
                   maxLength={512}
                 />
               </FormControl>
@@ -231,12 +220,13 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel className="font-semibold">Full Description</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Full product description"
+                  placeholder="Detailed product specifications and story..."
                   {...field}
-                  rows={6}
+                  value={field.value || ''}
+                  rows={5}
                 />
               </FormControl>
               <FormMessage />
@@ -248,7 +238,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           control={form.control}
           name="is_active"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
               <FormControl>
                 <Checkbox
                   checked={field.value}
@@ -256,22 +246,24 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel>Active</FormLabel>
+                <FormLabel>Product Visibility</FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  This product will be visible to customers in the store.
+                </p>
               </div>
             </FormItem>
           )}
         />
 
-        <div className="flex gap-4">
-          <Button type="submit" disabled={loading}>
-            {loading ? "Saving..." : isEdit ? "Update Product" : "Create Product"}
+        <div className="flex items-center justify-end gap-4 border-t pt-6">
+          <Button type="button" variant="ghost" onClick={() => router.back()}>
+            Discard Changes
           </Button>
-          <Button type="button" variant="outline" onClick={() => router.back()}>
-            Cancel
+          <Button type="submit" className="px-8" disabled={loading}>
+            {loading ? "Processing..." : isEdit ? "Save Changes" : "Create Product"}
           </Button>
         </div>
       </form>
     </Form>
   )
 }
-

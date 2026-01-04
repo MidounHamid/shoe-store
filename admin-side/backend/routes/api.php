@@ -53,6 +53,11 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('sizes', SizeController::class);
     Route::apiResource('product-variants', ProductVariantController::class);
     Route::apiResource('product-images', ProductImageController::class);
+
+Route::delete('product-images/{id}/main-image', [ProductImageController::class, 'deleteMainImage']);
+Route::delete('product-images/{id}/secondary-image', [ProductImageController::class, 'deleteSecondaryImage']);
+
+
     Route::apiResource('product-features', ProductFeatureController::class);
     Route::apiResource('tags', TagController::class);
     Route::apiResource('carts', CartController::class);

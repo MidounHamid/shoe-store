@@ -22,56 +22,59 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/use-toast";
 import { getAuthToken } from "@/lib/auth";
+import Image from "next/image";
+import { X, AlertCircle } from "lucide-react";
 
 const imageSchema = z.object({
   product_id: z.number().min(1, "Product is required"),
   variant_id: z.number().optional().nullable(),
-  image_url: z
-    .string()
-    .min(1, "Image URL is required")
-    .max(500, "URL too long"),
-  display_order: z
-    .number()
-    .min(0, "Display order must be non-negative")
-    .default(0),
-  is_principal: z.boolean().default(false),
+  display_order: z.number().min(0).default(0),
 });
-
-type ImageFormValues = z.infer<typeof imageSchema>;
 
 interface ProductImageFormProps {
   initialData?: {
     id: number;
     product_id: number;
     variant_id: number | null;
-    image_url: string;
+    main_image: string | null;
+    second_images: string[] | null;
     display_order: number;
-    is_principal: boolean;
   };
 }
 
-export default function ProductImageForm({
-  initialData,
-}: ProductImageFormProps) {
+export default function ProductImageForm({ initialData }: ProductImageFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<{ id: number; name: string }[]>([]);
-  const [variants, setVariants] = useState<
-    { id: number; sku: string; product_id: number }[]
-  >([]);
+  const [variants, setVariants] = useState<{ id: number; sku: string }[]>([]);
+  
+  // State for NEW Files
+  const [mainFile, setMainFile] = useState<File | null>(null);
+  const [secondFiles, setSecondFiles] = useState<File[]>([]);
+
+  // State for existing images (from database)
+  const [existingMainImage, setExistingMainImage] = useState<string | null>(initialData?.main_image || null);
+  const [existingSecondImages, setExistingSecondImages] = useState<string[]>(
+    Array.isArray(initialData?.second_images) ? initialData.second_images : []
+  );
+
+  // State for new image previews
+  const [newMainPreview, setNewMainPreview] = useState<string | null>(null);
+  const [newSecondPreviews, setNewSecondPreviews] = useState<string[]>([]);
+
+  // Track if main image should be deleted
+  const [deleteMainImage, setDeleteMainImage] = useState(false);
+
   const isEdit = !!initialData;
 
-  const form = useForm<ImageFormValues>({
+  const form = useForm<z.infer<typeof imageSchema>>({
     resolver: zodResolver(imageSchema),
     defaultValues: {
       product_id: initialData?.product_id || 0,
       variant_id: initialData?.variant_id || null,
-      image_url: initialData?.image_url || "",
       display_order: initialData?.display_order || 0,
-      is_principal: initialData?.is_principal || false,
     },
   });
 
@@ -79,111 +82,113 @@ export default function ProductImageForm({
 
   useEffect(() => {
     fetchProducts();
-    if (initialData?.product_id) {
-      fetchVariants(initialData.product_id);
-    }
+    if (initialData?.product_id) fetchVariants(initialData.product_id);
   }, []);
 
   useEffect(() => {
-    if (selectedProductId) {
+    if (selectedProductId && selectedProductId !== 0) {
       fetchVariants(selectedProductId);
-    } else {
-      setVariants([]);
     }
   }, [selectedProductId]);
 
   const fetchProducts = async () => {
-    try {
-      const token = getAuthToken();
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/products`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        const result = await response.json();
-        const productsData = result.data || result;
-        setProducts(Array.isArray(productsData) ? productsData : []);
-      }
-    } catch (error) {
-      console.error("Error fetching products:", error);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products`, {
+      headers: { Authorization: `Bearer ${getAuthToken()}`, Accept: "application/json" }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setProducts(data.data || data);
     }
   };
 
   const fetchVariants = async (productId: number) => {
-    try {
-      const token = getAuthToken();
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/product-variants?product_id=${productId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        const result = await response.json();
-        const variantsData = result.data || result;
-        setVariants(Array.isArray(variantsData) ? variantsData : []);
-      }
-    } catch (error) {
-      console.error("Error fetching variants:", error);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/product-variants?product_id=${productId}`, {
+      headers: { Authorization: `Bearer ${getAuthToken()}`, Accept: "application/json" }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setVariants(data.data || data);
     }
   };
 
-  const onSubmit = async (values: ImageFormValues) => {
+  const handleMainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setMainFile(file);
+      setNewMainPreview(URL.createObjectURL(file));
+      setDeleteMainImage(false); // Cancel any deletion if new file selected
+    }
+  };
+
+  const handleSecondariesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setSecondFiles(prev => [...prev, ...filesArray]);
+      const newPreviews = filesArray.map(f => URL.createObjectURL(f));
+      setNewSecondPreviews(prev => [...prev, ...newPreviews]);
+    }
+  };
+
+  const removeExistingSecondary = (url: string) => {
+    setExistingSecondImages(prev => prev.filter(img => img !== url));
+  };
+
+  const removeNewSecondary = (index: number) => {
+    setNewSecondPreviews(prev => prev.filter((_, i) => i !== index));
+    setSecondFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeMainImage = () => {
+    if (existingMainImage) {
+      setDeleteMainImage(true);
+      setExistingMainImage(null);
+    }
+    setMainFile(null);
+    setNewMainPreview(null);
+  };
+
+  const onSubmit = async (values: z.infer<typeof imageSchema>) => {
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("product_id", values.product_id.toString());
+    formData.append("display_order", values.display_order.toString());
+    if (values.variant_id) formData.append("variant_id", values.variant_id.toString());
+    
+    // Main image handling
+    if (mainFile) {
+      formData.append("main_image", mainFile);
+    } else if (deleteMainImage) {
+      formData.append("delete_main_image", "1");
+    }
+
+    // New secondary images
+    secondFiles.forEach((file) => formData.append("second_images[]", file));
+
+    // Keep existing secondary images (send URLs that should remain)
+    if (isEdit && existingSecondImages.length > 0) {
+      formData.append("keep_second_images", JSON.stringify(existingSecondImages));
+    }
+
+    if (isEdit) formData.append("_method", "PUT");
+
     try {
-      setLoading(true);
-      const token = getAuthToken();
-      const url = isEdit
+      const url = isEdit 
         ? `${process.env.NEXT_PUBLIC_API_URL}/api/product-images/${initialData.id}`
         : `${process.env.NEXT_PUBLIC_API_URL}/api/product-images`;
 
-      const body = {
-        product_id: values.product_id,
-        variant_id: values.variant_id || null,
-        image_url: values.image_url,
-        display_order: values.display_order,
-        is_principal: values.is_principal,
-      };
-
-      const response = await fetch(url, {
-        method: isEdit ? "PUT" : "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(body),
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getAuthToken()}`, Accept: "application/json" },
+        body: formData,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to save product image");
-      }
+      if (!res.ok) throw new Error("Failed to save images");
 
-      toast({
-        title: "Success",
-        description: isEdit
-          ? "Product image updated successfully"
-          : "Product image created successfully",
-      });
-
+      toast({ title: "Success", description: "Product images saved successfully" });
       router.push("/products/images");
-    } catch (error: any) {
-      console.error("Error saving product image:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save product image",
-        variant: "destructive",
-      });
+      router.refresh();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -191,36 +196,22 @@ export default function ProductImageForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 bg-white p-6 rounded-lg border shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="product_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Product *</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(parseInt(value));
-                    form.setValue("variant_id", null);
-                  }}
+                <Select 
+                  onValueChange={(v) => field.onChange(parseInt(v))} 
                   defaultValue={field.value?.toString()}
                   disabled={isEdit}
                 >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select product" />
-                    </SelectTrigger>
-                  </FormControl>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger></FormControl>
                   <SelectContent>
-                    {products.map((product) => (
-                      <SelectItem
-                        key={product.id}
-                        value={product.id.toString()}
-                      >
-                        {product.name}
-                      </SelectItem>
-                    ))}
+                    {products.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -234,106 +225,142 @@ export default function ProductImageForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Variant (Optional)</FormLabel>
-                <Select
-                  onValueChange={(value) =>
-                    field.onChange(value === "__none" ? null : parseInt(value))
-                  }
-                  value={
-                    field.value === null ? "__none" : field.value?.toString()
-                  }
-                  disabled={!form.watch("product_id") || variants.length === 0}
+                <Select 
+                  onValueChange={(v) => field.onChange(v === "none" ? null : parseInt(v))} 
+                  value={field.value?.toString() || "none"}
                 >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select variant (optional)" />
-                    </SelectTrigger>
-                  </FormControl>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select Variant" /></SelectTrigger></FormControl>
                   <SelectContent>
-                    <SelectItem value="__none">None (Product Image)</SelectItem>
-                    {variants.map((variant) => (
-                      <SelectItem
-                        key={variant.id}
-                        value={variant.id.toString()}
-                      >
-                        {variant.sku}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="none">No Variant</SelectItem>
+                    {variants.map(v => <SelectItem key={v.id} value={v.id.toString()}>{v.sku}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          <FormField
-            control={form.control}
-            name="image_url"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Image URL *</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="https://example.com/image.jpg"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="display_order"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Display Order</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseInt(e.target.value) || 0)
-                    }
-                    value={field.value}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="is_principal"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 md:col-span-2">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Set as Principal Image</FormLabel>
-                  <p className="text-sm text-muted-foreground">
-                    Only one principal image per product. Setting this will
-                    unset other principal images.
-                  </p>
-                </div>
-              </FormItem>
-            )}
-          />
         </div>
 
-        <div className="flex gap-4">
-          <Button type="submit" disabled={loading}>
-            {loading ? "Saving..." : isEdit ? "Update Image" : "Create Image"}
-          </Button>
-          <Button type="button" variant="outline" onClick={() => router.back()}>
-            Cancel
-          </Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Main Image Section */}
+          <div className="space-y-4">
+            <FormLabel>Main Image</FormLabel>
+            
+            {/* Show existing main image */}
+            {existingMainImage && !newMainPreview && (
+              <div className="space-y-2">
+                <div className="relative aspect-video w-full border rounded-md overflow-hidden bg-muted">
+                  <Image src={existingMainImage} alt="Main" fill className="object-contain" unoptimized />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={removeMainImage}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-green-600 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> Current image
+                </p>
+              </div>
+            )}
+
+            {/* Show new main image preview */}
+            {newMainPreview && (
+              <div className="space-y-2">
+                <div className="relative aspect-video w-full border-2 border-blue-500 rounded-md overflow-hidden bg-muted">
+                  <Image src={newMainPreview} alt="New Main" fill className="object-contain" unoptimized />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={removeMainImage}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-blue-600 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> New image selected (will replace current)
+                </p>
+              </div>
+            )}
+
+            <Input 
+              type="file" 
+              accept="image/*" 
+              onChange={handleMainChange}
+            />
+          </div>
+
+          {/* Secondary Images Section */}
+          <div className="space-y-4">
+            <FormLabel>Secondary Images</FormLabel>
+            <Input type="file" accept="image/*" multiple onChange={handleSecondariesChange} />
+            
+            <div className="grid grid-cols-3 gap-2">
+              {/* Existing secondary images */}
+              {existingSecondImages.map((url, i) => (
+                <div key={`existing-${i}`} className="relative aspect-square border rounded-md overflow-hidden bg-muted group">
+                  <Image src={url} alt={`Existing ${i}`} fill className="object-cover" unoptimized />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-1 right-1 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => removeExistingSecondary(url)}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                  <div className="absolute bottom-0 left-0 right-0 bg-green-600 text-white text-[8px] text-center py-0.5">
+                    Current
+                  </div>
+                </div>
+              ))}
+
+              {/* New secondary images */}
+              {newSecondPreviews.map((url, i) => (
+                <div key={`new-${i}`} className="relative aspect-square border-2 border-blue-500 rounded-md overflow-hidden bg-muted group">
+                  <Image src={url} alt={`New ${i}`} fill className="object-cover" unoptimized />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-1 right-1 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => removeNewSecondary(i)}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                  <div className="absolute bottom-0 left-0 right-0 bg-blue-600 text-white text-[8px] text-center py-0.5">
+                    New
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Green border = Current images | Blue border = New images to upload
+            </p>
+          </div>
+        </div>
+
+        <FormField
+          control={form.control}
+          name="display_order"
+          render={({ field }) => (
+            <FormItem className="max-w-[200px]">
+              <FormLabel>Display Order</FormLabel>
+              <FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-4 border-t pt-6">
+          <Button type="button" variant="ghost" onClick={() => router.back()}>Cancel</Button>
+          <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save Product Images"}</Button>
         </div>
       </form>
     </Form>

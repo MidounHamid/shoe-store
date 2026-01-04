@@ -10,6 +10,7 @@ import { getAuthToken } from "@/lib/auth"
 import { Loading } from "@/components/ui/loading"
 import { toast } from "@/components/ui/use-toast"
 
+// UPDATED TYPE: Removed default_image, added main_image and second_images
 export type Product = {
   id: number
   brand_id: number
@@ -17,7 +18,8 @@ export type Product = {
   slug: string
   short_description: string | null
   description: string | null
-  default_image: string | null
+  main_image: string | null
+  second_images?: string[] | null
   is_active: boolean
   brand_name?: string
   created_at: string
@@ -44,6 +46,8 @@ export default function EditProductPage() {
         if (!response.ok) throw new Error("Failed to fetch product")
 
         const data = await response.json()
+        
+        // Ensure the component handles the data correctly
         setProduct(data)
       } catch (error) {
         console.error("Error fetching product:", error)
@@ -65,7 +69,7 @@ export default function EditProductPage() {
   return (
     <Layout>
       {loading ? (
-        <div className="flex items-center justify-center h-screen">
+        <div className="flex items-center justify-center h-[calc(100-64px)] min-h-[400px]">
           <Loading />
         </div>
       ) : product ? (
@@ -74,24 +78,31 @@ export default function EditProductPage() {
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => router.back()}
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
             <div>
               <h1 className="text-2xl font-bold">Edit Product</h1>
-              <p className="text-gray-600">Update product information</p>
+              <p className="text-sm text-muted-foreground">
+                Updating: <span className="font-medium text-foreground">{product.name}</span>
+              </p>
             </div>
           </div>
+          
+          {/* ProductForm will receive 'main_image' inside the initialData now */}
           <ProductForm initialData={product} />
         </div>
       ) : (
-        <div className="flex items-center justify-center h-screen">
-          <p className="text-red-500">Product not found</p>
+        <div className="flex flex-col items-center justify-center h-[400px] space-y-4">
+          <p className="text-destructive font-medium">Product not found</p>
+          <Button onClick={() => router.push("/products/list")}>
+            Return to list
+          </Button>
         </div>
       )}
     </Layout>
   )
 }
-

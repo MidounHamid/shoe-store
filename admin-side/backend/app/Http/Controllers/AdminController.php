@@ -104,6 +104,52 @@ class AdminController extends BaseController
 
     return response()->json(['message' => 'Role and permissions created successfully'], 201);
 }
+
+
+public function updateRole(Request $request, $id)
+{
+    $role = Role::find($id);
+
+    if (!$role) {
+        return response()->json(['message' => 'Role not found'], 404);
+    }
+
+    $allowedServices = [
+        "dashboard", "users", "products", "brands", "categories",
+        "sizes", "tags", "orders", "payments", "carts",
+        "favorites", "reviews", "addresses", "settings"
+    ];
+
+    $permissions = $request->input('permissions');
+
+    if (!is_array($permissions)) {
+        return response()->json(['message' => 'Invalid permissions format'], 400);
+    }
+
+    $validation = $this->validatePermissions($permissions, $allowedServices);
+    if ($validation['error']) return $validation['response'];
+
+    // Update Role Name
+    $role->update(['name' => $request->name]);
+
+    // Update Permissions: Usually best to delete old ones and re-insert
+    Permission::where('role_id', $id)->delete();
+
+    foreach ($permissions as $perm) {
+        Permission::create([
+            'role_id' => $role->id,
+            'service' => $perm['service'],
+            'read'    => (bool)$perm['read'],
+            'create'  => (bool)$perm['create'],
+            'update'  => (bool)$perm['update'],
+            'delete'  => (bool)$perm['delete'],
+        ]);
+    }
+
+    return response()->json(['message' => 'Role and permissions updated successfully']);
+}
+
+
 /**
  * Helper function to validate the permissions array
  */
