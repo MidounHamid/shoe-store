@@ -19,7 +19,7 @@ class ProductController extends Controller
             ->select(
                 'products.*',
                 'brands.name as brand_name',
-                'product_images.main_image',
+                'product_images.image_principale',
                 'product_images.second_images'
             )
             ->orderBy('products.created_at', 'desc')
@@ -28,6 +28,7 @@ class ProductController extends Controller
         // Format image URLs for each product
         $products->getCollection()->transform(function ($product) {
             $this->formatProductImages($product);
+
             return $product;
         });
 
@@ -61,13 +62,13 @@ class ProductController extends Controller
             ->select(
                 'products.*',
                 'brands.name as brand_name',
-                'product_images.main_image',
+                'product_images.image_principale',
                 'product_images.second_images'
             )
             ->where('products.id', $id)
             ->first();
 
-        if (!$product) {
+        if (! $product) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
@@ -95,6 +96,7 @@ class ProductController extends Controller
     public function destroy($id)
     {
         DB::table('products')->where('id', $id)->delete();
+
         return response()->json(['message' => 'Deleted']);
     }
 
@@ -104,8 +106,8 @@ class ProductController extends Controller
     private function formatProductImages($product)
     {
         // Convert main_image path to full URL
-        $product->main_image = $product->main_image
-            ? asset('storage/' . $product->main_image)
+        $product->image_principale = $product->image_principale
+            ? asset('storage/'.$product->image_principale)
             : null;
 
         // Convert second_images JSON to array of full URLs
@@ -113,8 +115,8 @@ class ProductController extends Controller
             $secondPaths = json_decode($product->second_images, true);
 
             if (is_array($secondPaths)) {
-                $product->second_images = array_map(function($path) {
-                    return asset('storage/' . $path);
+                $product->second_images = array_map(function ($path) {
+                    return asset('storage/'.$path);
                 }, $secondPaths);
             } else {
                 $product->second_images = [];

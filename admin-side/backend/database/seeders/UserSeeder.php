@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,15 +18,18 @@ class UserSeeder extends Seeder
         $customerRole = Role::where('name', 'customer')->first();
 
         // Admin user
-        User::create([
-            'first_name' => 'Admin',
-            'last_name' => 'User',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('admin@gmail.com'),
-            'phone' => '+1234567890',
-            'role_id' => $adminRole->id,
-            'email_verified' => true,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'first_name' => 'Admin',
+                'last_name' => 'User',
+                'email' => 'admin@gmail.com',
+                'password' => Hash::make('admin@gmail.com'),
+                'phone' => '+1234567890',
+                'role_id' => $adminRole->id,
+                'email_verified' => true,
+            ]
+        );
 
         // Customer users
         $customers = [
@@ -93,12 +96,15 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($customers as $customer) {
-            User::create([
-                ...$customer,
-                'password' => Hash::make('password'),
-                'role_id' => $customerRole->id,
-                'email_verified' => true,
-            ]);
+            User::updateOrCreate(
+                ['email' => $customer['email']],
+                [
+                    ...$customer,
+                    'password' => Hash::make('password'),
+                    'role_id' => $customerRole->id,
+                    'email_verified' => true,
+                ]
+            );
         }
     }
 }

@@ -1,30 +1,44 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { CanvasBackground } from "@/components/canvas-background"
 import { Header } from "@/components/header"
 import { ProductCard } from "@/components/product-card"
 import { FilterSidebar } from "@/components/filter-sidebar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { products } from "@/lib/products"
+import { listProducts, type Product } from "@/lib/products"
+import { useSearchParams } from "next/navigation"
 
 export default function ProductsPage() {
   const [sortBy, setSortBy] = useState("featured")
+  const searchParams = useSearchParams()
+  const brand = searchParams.get("brand") || undefined
 
-  const sortedProducts = [...products].sort((a, b) => {
-    switch (sortBy) {
-      case "price-low":
-        return a.price - b.price
-      case "price-high":
-        return b.price - a.price
-      case "rating":
-        return b.rating - a.rating
-      case "name":
-        return a.name.localeCompare(b.name)
-      default:
-        return 0
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      try {
+        setLoading(true)
+        setError(null)
+        const res = await listProducts({ per_page: 60, sort: sortBy as any, brand })
+        if (!cancelled) setProducts(res.data)
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message || "Failed to load products")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
-  })
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [sortBy, brand])
 
   return (
     <>
@@ -38,7 +52,9 @@ export default function ProductsPage() {
         </div>
 
         <div className="mb-6 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{products.length} products found</p>
+          <p className="text-sm text-muted-foreground">
+            {loading ? "Loading..." : `${products.length} products found`}
+          </p>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Sort by:</span>
             <Select value={sortBy} onValueChange={setSortBy}>
@@ -65,9 +81,11 @@ export default function ProductsPage() {
 
           <div className="flex-1">
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {sortedProducts.map((product) => (
-                <ProductCard key={product.id} {...product} />
-              ))}
+              {error ? (
+                <div className="text-sm text-red-500">{error}</div>
+              ) : (
+                products.map((product) => <ProductCard key={product.id} {...product} />)
+              )}
             </div>
           </div>
         </div>

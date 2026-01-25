@@ -30,7 +30,7 @@ class ProductVariantSeeder extends Seeder
                     foreach ($storages as $storage) {
                         $variants[] = [
                             'product_id' => $product->id,
-                            'sku' => strtoupper(Str::substr($product->name, 0, 3)) . '-' . Str::substr($color, 0, 3) . '-' . $storage,
+                            'sku' => strtoupper(Str::substr($product->name, 0, 3)).'-'.Str::substr($color, 0, 3).'-'.$storage,
                             'size_id' => $this->getSizeId($storage), // Changed from 'size'
                             'color' => $color,
                             'price' => rand(699, 1299),
@@ -47,7 +47,7 @@ class ProductVariantSeeder extends Seeder
                 foreach ($configs as $index => $config) {
                     $variants[] = [
                         'product_id' => $product->id,
-                        'sku' => strtoupper(Str::substr($product->name, 0, 3)) . '-CFG-' . ($index + 1),
+                        'sku' => strtoupper(Str::substr($product->name, 0, 3)).'-CFG-'.($index + 1),
                         'size_id' => $this->getSizeId($config), // Changed from 'size'
                         'color' => 'Silver',
                         'price' => rand(999, 2499),
@@ -65,7 +65,7 @@ class ProductVariantSeeder extends Seeder
                     foreach ($sizes as $size) {
                         $variants[] = [
                             'product_id' => $product->id,
-                            'sku' => strtoupper(Str::substr($product->name, 0, 3)) . '-' . Str::substr($color, 0, 3) . '-' . $size,
+                            'sku' => strtoupper(Str::substr($product->name, 0, 3)).'-'.Str::substr($color, 0, 3).'-'.$size,
                             'size_id' => $this->getSizeId($size), // Changed from 'size'
                             'color' => $color,
                             'price' => rand(79, 199),
@@ -82,7 +82,7 @@ class ProductVariantSeeder extends Seeder
                 foreach ($sizes as $size) {
                     $variants[] = [
                         'product_id' => $product->id,
-                        'sku' => strtoupper(Str::substr($product->name, 0, 3)) . '-' . str_replace('"', '', $size),
+                        'sku' => strtoupper(Str::substr($product->name, 0, 3)).'-'.str_replace('"', '', $size),
                         'size_id' => $this->getSizeId($size), // Changed from 'size'
                         'color' => 'Black',
                         'price' => rand(999, 2999),
@@ -100,7 +100,7 @@ class ProductVariantSeeder extends Seeder
                     foreach ($sizes as $size) {
                         $variants[] = [
                             'product_id' => $product->id,
-                            'sku' => strtoupper(Str::substr($product->name, 0, 3)) . '-' . Str::substr($color, 0, 3) . '-' . $size,
+                            'sku' => strtoupper(Str::substr($product->name, 0, 3)).'-'.Str::substr($color, 0, 3).'-'.$size,
                             'size_id' => $this->getSizeId($size), // Changed from 'size'
                             'color' => $color,
                             'price' => rand(19, 99),
@@ -112,7 +112,10 @@ class ProductVariantSeeder extends Seeder
             }
 
             foreach ($variants as $variant) {
-                ProductVariant::create($variant);
+                ProductVariant::updateOrCreate(
+                    ['sku' => $variant['sku']],
+                    $variant
+                );
             }
         }
     }
@@ -122,9 +125,12 @@ class ProductVariantSeeder extends Seeder
      */
     private function getSizeId($name)
     {
-        if (!$name) return null;
+        if (! $name) {
+            return null;
+        }
 
         $size = Size::firstOrCreate(['name' => $name]);
+
         return $size->id;
     }
 }

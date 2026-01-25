@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Layout } from "@/components/layouts/layout"
-import Statics from "@/components/statics"
+import Statics from "@/components/statistics"
 import { getAuthToken } from "@/lib/auth"
 import { Loading } from "@/components/ui/loading"
 

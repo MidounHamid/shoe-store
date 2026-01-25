@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Brand;
 use App\Models\Product;
-use App\Models\ProductImage;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -78,25 +77,20 @@ class ProductSeeder extends Seeder
 
         foreach ($products as $productData) {
             $brand = $brands->firstWhere('name', $productData['brand']);
-            if (!$brand) continue;
+            if (! $brand) {
+                continue;
+            }
 
             // 1. Create the Product (No image column here anymore)
-            $product = Product::create([
+            $product = Product::updateOrCreate([
+                'slug' => Str::slug($productData['name']),
+            ], [
                 'brand_id' => $brand->id,
                 'name' => $productData['name'],
                 'slug' => Str::slug($productData['name']),
                 'short_description' => $productData['short_description'],
                 'description' => $productData['description'],
                 'is_active' => $productData['is_active'],
-            ]);
-
-            // 2. Create the Image in the product_images table
-            ProductImage::create([
-                'product_id' => $product->id,
-                'variant_id' => null, // Base product image
-                'main_image' => $productData['image'],
-                'second_images' => json_encode([]),
-                'display_order' => 0,
             ]);
         }
     }

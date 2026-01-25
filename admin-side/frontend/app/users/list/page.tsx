@@ -85,7 +85,7 @@ export default function UsersListPage() {
     try {
       setLoading(true)
       const token = getAuthToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",

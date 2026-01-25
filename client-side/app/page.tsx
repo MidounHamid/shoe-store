@@ -1,16 +1,44 @@
-import { CanvasBackground } from "@/components/canvas-background"
-import { Header } from "@/components/header"
-import { BrandLogos } from "@/components/brand-logos"
-import { ProductCard } from "@/components/product-card"
-import { FilterSidebar } from "@/components/filter-sidebar"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, TrendingUp } from "lucide-react"
-import { products } from "@/lib/products"
-import Image from "next/image"
+"use client";
 
-const featuredProducts = products.slice(0, 8)
+import { useEffect, useState } from "react"; 
+import { CanvasBackground } from "@/components/canvas-background";
+import { Header } from "@/components/header";
+import { BrandLogos } from "@/components/brand-logos";
+import { ProductCard } from "@/components/product-card";
+import { FilterSidebar } from "@/components/filter-sidebar";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, TrendingUp } from "lucide-react";
+import { listProducts, type Product } from "@/lib/products";
+import Image from "next/image";
 
+// FIX: Removed 'async' from the function definition
 export default function HomePage() {
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    async function load() {
+      try {
+        setLoading(true);
+        // This hits your Laravel API
+        const res = await listProducts({ per_page: 8, sort: "featured" });
+        if (isMounted) {
+          // Laravel pagination returns products inside the 'data' key
+          setFeaturedProducts(res.data);
+        }
+      } catch (error) {
+        console.error("Home page fetch error:", error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    load();
+    return () => { isMounted = false; };
+  }, []);
+
   return (
     <>
       <CanvasBackground />
@@ -20,67 +48,41 @@ export default function HomePage() {
       <section className="relative overflow-hidden min-h-[calc(100vh-4rem)]">
         <div className="container mx-auto px-4 py-16 md:py-24 lg:py-32">
           <div className="flex flex-col items-start gap-12 lg:flex-row lg:items-center lg:justify-between">
-            {/* Left Content */}
             <div className="flex-1 max-w-3xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm text-primary mb-8">
                 <TrendingUp className="h-4 w-4" />
                 <span>New Arrivals Available</span>
               </div>
               <h1 className="text-balance text-5xl font-bold tracking-tight md:text-6xl lg:text-7xl xl:text-8xl mb-6 leading-tight">
-                Find Your{" "}
-                <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">Perfect</span>{" "}
-                Shoes
+                Find Your <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">Perfect</span> Shoes
               </h1>
               <p className="text-pretty text-lg text-muted-foreground md:text-xl max-w-2xl mb-10">
-                Discover premium sneakers from the world's most iconic brands. Elevate your style with our curated
-                collection.
+                Discover premium sneakers from the world's most iconic brands.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
-                <Button size="lg" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 px-8">
-                  Shop Now
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-                <Button size="lg" variant="outline" className="px-8 bg-transparent">
-                  View Collections
+                <Button size="lg" className="gap-2 px-8">
+                  Shop Now <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-
-            {/* Right Image */}
             <div className="flex-1 flex justify-center lg:justify-end w-full">
-              <div className="relative w-full max-w-2xl aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl shadow-primary/20">
-                <Image
-                  src="/images/image.png"
-                  alt="Nike Air Jordan sneakers with basketball"
-                  fill
-                  className="object-cover"
-                  priority
-                />
+              <div className="relative w-full max-w-2xl aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
+                <Image src="/images/image.png" alt="Hero" fill className="object-cover" priority />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Brand Logos */}
       <BrandLogos />
 
-      {/* Products Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="mb-8">
-            <h2 className="text-4xl font-bold md:text-5xl">Discount:</h2>
-          </div>
-
           <div className="mb-12 flex items-center justify-between">
             <div>
               <h3 className="text-2xl font-bold md:text-3xl">Featured Products</h3>
-              <p className="mt-2 text-muted-foreground">Handpicked selections from our premium collection</p>
+              {loading && <p className="text-primary animate-pulse">Loading amazing shoes...</p>}
             </div>
-            <Button variant="ghost" className="hidden md:flex">
-              View All
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
           </div>
 
           <div className="flex flex-col gap-8 lg:flex-row">
@@ -96,6 +98,12 @@ export default function HomePage() {
                   <ProductCard key={product.id} {...product} />
                 ))}
               </div>
+              
+              {!loading && featuredProducts.length === 0 && (
+                <div className="text-center py-20 border-2 border-dashed rounded-xl">
+                  <p className="text-muted-foreground">No products found. Check your Laravel database!</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -108,7 +116,8 @@ export default function HomePage() {
             <div>
               <h3 className="mb-4 text-lg font-bold">SneakHub</h3>
               <p className="text-sm text-muted-foreground">
-                Your destination for premium sneakers from the world's top brands.
+                Your destination for premium sneakers from the world's top
+                brands.
               </p>
             </div>
             <div>
@@ -145,5 +154,5 @@ export default function HomePage() {
         </div>
       </footer>
     </>
-  )
+  );
 }

@@ -1,18 +1,35 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
+import { listBrands } from "@/lib/products"
 
-const brands = ["Nike", "Adidas", "Puma", "New Balance", "Jordan", "Reebok"]
 const sizes = ["7", "8", "9", "10", "11", "12", "13"]
 const colors = ["Black", "White", "Red", "Blue", "Green", "Gray"]
 
 export function FilterSidebar() {
   const [priceRange, setPriceRange] = useState([0, 500])
+  const [brands, setBrands] = useState<string[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const res = await listBrands()
+        if (!cancelled) setBrands(res.map((b) => b.name))
+      } catch {
+        // keep empty; UI still works without brands
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <div className="space-y-4">
@@ -21,7 +38,7 @@ export function FilterSidebar() {
           <CardTitle className="text-base">Brand</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {brands.map((brand) => (
+          {(brands.length ? brands : ["Loading..."]).map((brand) => (
             <div key={brand} className="flex items-center gap-2">
               <Checkbox id={brand} />
               <Label htmlFor={brand} className="text-sm font-normal cursor-pointer">

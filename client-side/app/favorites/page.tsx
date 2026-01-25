@@ -14,9 +14,9 @@ import { useState } from "react"
 export default function FavoritesPage() {
   const { favorites, removeFavorite } = useFavorites()
   const { addItem } = useCart()
-  const [selectedSize, setSelectedSize] = useState<{ [key: string]: string }>({})
+  const [selectedSize, setSelectedSize] = useState<Record<number, string>>({})
 
-  const handleAddToCart = (productId: string) => {
+  const handleAddToCart = (productId: number) => {
     const product = favorites.find((p) => p.id === productId)
     if (product) {
       const size = selectedSize[productId] || product.sizes[0]

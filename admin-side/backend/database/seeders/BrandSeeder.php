@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Brand;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class BrandSeeder extends Seeder
 {
@@ -32,8 +31,10 @@ class BrandSeeder extends Seeder
         ];
 
         foreach ($brands as $brand) {
-            Brand::create($brand);
+            Brand::updateOrCreate(
+                ['slug' => $brand['slug']],
+                $brand
+            );
         }
     }
 }
-

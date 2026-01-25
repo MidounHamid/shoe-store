@@ -12,21 +12,21 @@ import { useFavorites } from "@/lib/favorites-context"
 import type { Product } from "@/lib/products"
 
 interface ProductCardProps {
-  id: string
+id: number
   name: string
   brand: string
   price: number
-  image: string
+  image: string | null
   rating: number
   reviews: number
   isNew?: boolean
-  category?: string
+  category?: string | null; // Changed: allowed null
   sizes?: string[]
   colors?: string[]
   description?: string
   features?: string[]
   images?: string[]
-  originalPrice?: number
+  originalPrice?: number | null; // Changed: allowed null
 }
 
 export function ProductCard({
@@ -86,6 +86,7 @@ export function ProductCard({
             <Image
               src={image || "/placeholder.svg"}
               alt={name}
+              unoptimized={true}
               fill
               className="object-cover transition-all duration-700 group-hover:scale-125 group-hover:rotate-2"
             />
