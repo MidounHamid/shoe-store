@@ -39,6 +39,7 @@ Route::prefix('shop')->group(function () {
     Route::get('/products/{id}', [ShopProductController::class, 'show']);
     Route::get('/brands', [ShopBrandController::class, 'index']);
     Route::get('/categories', [ShopCategoryController::class, 'index']);
+    Route::get('/filters', [App\Http\Controllers\ShopFilterController::class, 'index']);
 });
 
 Route::middleware('auth:api')->group(function () {

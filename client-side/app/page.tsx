@@ -10,6 +10,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { listProducts, type Product } from "@/lib/products";
 import Image from "next/image";
+import { ValueProps } from "@/components/value-props";
+import { FeaturedCategories } from "@/components/featured-categories";
+import { HotDrops } from "@/components/hot-drops";
+import { SocialProof } from "@/components/social-proof";
+
 
 // FIX: Removed 'async' from the function definition
 export default function HomePage() {
@@ -65,16 +70,41 @@ export default function HomePage() {
                 </Button>
               </div>
             </div>
-            <div className="flex-1 flex justify-center lg:justify-end w-full">
+            {/* <div className="flex-1 flex justify-center lg:justify-end w-full">
               <div className="relative w-full max-w-2xl aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
-                <Image src="/images/image.png" alt="Hero" fill className="object-cover" priority />
+                <Image src="/images/pexels-jddaniel-2385477.jpg" alt="Hero" fill className="object-cover" priority />
+              </div>
+            </div> */}
+            <div className="flex-1 flex justify-center lg:justify-end w-full">
+              <div className="relative w-full max-w-2xl aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl shadow-primary/20">
+                <Image
+                  src="/images/pexels-jddaniel-2385477.jpg"
+                  alt="Nike Air Jordan sneakers with basketball"
+                  fill
+                  className="object-cover"
+                  priority
+                />
               </div>
             </div>
           </div>
         </div>
       </section>
 
+            {/* Value Props */}
+      <ValueProps />
+
+      {/* Featured Categories */}
+      <FeaturedCategories />
+
+      {/* Hot Drops */}
+      <HotDrops />
+
+      {/* Brand Logos */}
       <BrandLogos />
+
+      {/* Social Proof */}
+      <SocialProof />
+
 
       <section className="py-16">
         <div className="container mx-auto px-4">

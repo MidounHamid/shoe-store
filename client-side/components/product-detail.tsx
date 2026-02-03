@@ -1,30 +1,38 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Star, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw } from "lucide-react"
-import Image from "next/image"
-import { useCart } from "@/lib/cart-context"
-import { useRouter } from "next/navigation"
-import type { Product } from "@/lib/products"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Star,
+  ShoppingCart,
+  Heart,
+  Share2,
+  Truck,
+  Shield,
+  RotateCcw,
+} from "lucide-react";
+import Image from "next/image";
+import { useCart } from "@/lib/cart-context";
+import { useRouter } from "next/navigation";
+import type { Product } from "@/lib/products";
 
 export default function ProductDetail({ product }: { product: Product }) {
-  const [selectedSize, setSelectedSize] = useState("")
-  const [selectedColor, setSelectedColor] = useState(product.colors[0] || "")
-  const [quantity, setQuantity] = useState(1)
-  const { addItem } = useCart()
-  const router = useRouter()
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState(product.colors[0] || "");
+  const [quantity, setQuantity] = useState(1);
+  const { addItem } = useCart();
+  const router = useRouter();
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert("Please select a size")
-      return
+      alert("Please select a size");
+      return;
     }
-    addItem(product, selectedSize, selectedColor, quantity)
-    router.push("/cart")
-  }
+    addItem(product, selectedSize, selectedColor, quantity);
+    router.push("/cart");
+  };
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -33,11 +41,25 @@ export default function ProductDetail({ product }: { product: Product }) {
         <div className="space-y-4">
           <Card className="overflow-hidden border-border/40 bg-card/50 backdrop-blur-sm">
             <div className="relative aspect-square">
-              <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-cover" />
+              <Image
+                src={product.image || "/placeholder.svg"}
+                alt={product.name}
+                              unoptimized={true}
+
+                fill
+                className="object-cover"
+              />
             </div>
           </Card>
           <div className="grid grid-cols-4 gap-4">
-            {(product.images || [product.image, product.image, product.image, product.image])
+            {(
+              product.images || [
+                product.image,
+                product.image,
+                product.image,
+                product.image,
+              ]
+            )
               .slice(0, 4)
               .map((img, i) => (
                 <Card
@@ -48,6 +70,7 @@ export default function ProductDetail({ product }: { product: Product }) {
                     <Image
                       src={img || "/placeholder.svg"}
                       alt={`${product.name} view ${i + 1}`}
+                      unoptimized={true}
                       fill
                       className="object-cover"
                     />
@@ -60,7 +83,11 @@ export default function ProductDetail({ product }: { product: Product }) {
         {/* Product Details */}
         <div className="space-y-6">
           <div>
-            {product.isNew && <Badge className="mb-2 bg-accent text-accent-foreground">New Arrival</Badge>}
+            {product.isNew && (
+              <Badge className="mb-2 bg-accent text-accent-foreground">
+                New Arrival
+              </Badge>
+            )}
             <h1 className="text-3xl font-bold md:text-4xl">{product.name}</h1>
             <p className="mt-2 text-xl text-primary">{product.brand}</p>
           </div>
@@ -71,7 +98,9 @@ export default function ProductDetail({ product }: { product: Product }) {
                 <Star
                   key={i}
                   className={`h-5 w-5 ${
-                    i < Math.floor(product.rating) ? "fill-accent text-accent" : "text-muted-foreground"
+                    i < Math.floor(product.rating)
+                      ? "fill-accent text-accent"
+                      : "text-muted-foreground"
                   }`}
                 />
               ))}
@@ -82,22 +111,32 @@ export default function ProductDetail({ product }: { product: Product }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="text-3xl font-bold">${product.price.toFixed(2)}</div>
+            <div className="text-3xl font-bold">
+              ${product.price.toFixed(2)}
+            </div>
             {product.originalPrice && (
-              <div className="text-xl text-muted-foreground line-through">${product.originalPrice.toFixed(2)}</div>
+              <div className="text-xl text-muted-foreground line-through">
+                ${product.originalPrice.toFixed(2)}
+              </div>
             )}
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="mb-3 block text-sm font-semibold">Select Color</label>
+              <label className="mb-3 block text-sm font-semibold">
+                Select Color
+              </label>
               <div className="flex flex-wrap gap-2">
                 {product.colors.map((color) => (
                   <Button
                     key={color}
                     variant={selectedColor === color ? "default" : "outline"}
                     onClick={() => setSelectedColor(color)}
-                    className={selectedColor === color ? "bg-primary text-primary-foreground" : ""}
+                    className={
+                      selectedColor === color
+                        ? "bg-primary text-primary-foreground"
+                        : ""
+                    }
                   >
                     {color}
                   </Button>
@@ -106,14 +145,20 @@ export default function ProductDetail({ product }: { product: Product }) {
             </div>
 
             <div>
-              <label className="mb-3 block text-sm font-semibold">Select Size</label>
+              <label className="mb-3 block text-sm font-semibold">
+                Select Size
+              </label>
               <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
                 {product.sizes.map((size) => (
                   <Button
                     key={size}
                     variant={selectedSize === size ? "default" : "outline"}
                     onClick={() => setSelectedSize(size)}
-                    className={selectedSize === size ? "bg-primary text-primary-foreground" : ""}
+                    className={
+                      selectedSize === size
+                        ? "bg-primary text-primary-foreground"
+                        : ""
+                    }
                   >
                     {size}
                   </Button>
@@ -122,7 +167,9 @@ export default function ProductDetail({ product }: { product: Product }) {
             </div>
 
             <div>
-              <label className="mb-3 block text-sm font-semibold">Quantity</label>
+              <label className="mb-3 block text-sm font-semibold">
+                Quantity
+              </label>
               <div className="flex w-32 items-center gap-2 rounded-lg border border-border bg-secondary p-2">
                 <Button
                   variant="ghost"
@@ -132,8 +179,15 @@ export default function ProductDetail({ product }: { product: Product }) {
                 >
                   -
                 </Button>
-                <span className="flex-1 text-center font-medium">{quantity}</span>
-                <Button variant="ghost" size="sm" onClick={() => setQuantity(quantity + 1)} className="h-8 w-8 p-0">
+                <span className="flex-1 text-center font-medium">
+                  {quantity}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="h-8 w-8 p-0"
+                >
                   +
                 </Button>
               </div>
@@ -159,7 +213,9 @@ export default function ProductDetail({ product }: { product: Product }) {
 
           <Card className="border-border/40 bg-card/50 p-6 backdrop-blur-sm">
             <h3 className="mb-4 text-lg font-semibold">Product Details</h3>
-            <p className="text-pretty text-muted-foreground">{product.description}</p>
+            <p className="text-pretty text-muted-foreground">
+              {product.description}
+            </p>
             <ul className="mt-4 space-y-2">
               {product.features.map((feature, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm">
@@ -175,7 +231,9 @@ export default function ProductDetail({ product }: { product: Product }) {
               <Truck className="h-6 w-6 text-primary" />
               <div>
                 <p className="text-sm font-semibold">Free Shipping</p>
-                <p className="text-xs text-muted-foreground">On orders over $100</p>
+                <p className="text-xs text-muted-foreground">
+                  On orders over $100
+                </p>
               </div>
             </Card>
             <Card className="flex items-center gap-3 border-border/40 bg-card/50 p-4 backdrop-blur-sm">
@@ -189,12 +247,14 @@ export default function ProductDetail({ product }: { product: Product }) {
               <RotateCcw className="h-6 w-6 text-primary" />
               <div>
                 <p className="text-sm font-semibold">Easy Returns</p>
-                <p className="text-xs text-muted-foreground">30-day return policy</p>
+                <p className="text-xs text-muted-foreground">
+                  30-day return policy
+                </p>
               </div>
             </Card>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
